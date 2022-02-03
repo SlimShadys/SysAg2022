@@ -3,3 +3,5 @@
 # Emovo / WAV_Demos / Noises
 Datasets/
 
+## Ignore Result files
+RESULT_DIR/
