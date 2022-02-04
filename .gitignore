@@ -5,3 +5,6 @@ Datasets/
 
 ## Ignore Result files
 RESULT_DIR/
+
+## Ignore CSV files
+CSV/
