@@ -278,7 +278,8 @@ resultDir = 'RESULT_DIR/'
 
 # Prima puliamo la cartella dei CSV, poi la ricreiamo ogni volta
 # in modo tale da avere sempre una cartella pulita
-shutil.rmtree(CSVDirectory)
+if(os.path.exists(CSVDirectory)):
+    shutil.rmtree(CSVDirectory)
 os.makedirs(CSVDirectory)    
 
 folders = os.listdir(datasetsDirectory)
@@ -288,8 +289,14 @@ folders.remove('15 Free Ambient Sound Effects')
 
 # Emovo
 makeEmovoValidationCSV()
+print("CSV per Emovo Test completato.")
+
 makeEmovoTrainingCSV()
+print("CSV per Emovo Training completato.")
 
 # wav_Demos
 makeWAV_Demos_ValidationCSV()
+print("CSV per WAV Demos Test completato.")
+
 makeWAV_Demos_TrainingCSV()
+print("CSV per WAV Demos Training completato.")
