@@ -148,24 +148,34 @@ def alltransformations(y,sr,fileName,i):
     # Ci salviamo l'audio modificato
     sf.write(os.path.join(RESULT_DIR, folder, fileName.split(".")[0] + "_" + str(i) + ".wav").replace('\\','/'), finalArray, sr)
     
-    M = librosa.feature.melspectrogram(wav_with_bg, sr, 
-       fmax = sr/2, # Maximum frequency to be used on the on the MEL scale
-       n_fft=2048, 
-       hop_length=512, 
-       n_mels = 96, # As per the Google Large-scale audio CNN paper
-       power = 2) # Power = 2 refers to squared amplitude
+    #M = librosa.feature.melspectrogram(wav_with_bg, sr, 
+    #   fmax = sr/2, # Maximum frequency to be used on the on the MEL scale
+    #   n_fft=2048, 
+    #   hop_length=512, 
+    #   n_mels = 96, # As per the Google Large-scale audio CNN paper
+    #   power = 2) # Power = 2 refers to squared amplitude
             
     # Power in DB
-    log_power = librosa.power_to_db(M, ref=np.max)# Covert to dB (log) scale
-    return log_power
+    #log_power = librosa.power_to_db(M, ref=np.max)# Covert to dB (log) scale
+    #return log_power
+    return
 
 
 def computeTransformation(wav_files, WAV_DIR):
     log_power = []
     c = 0
+
+    count = len(wav_files)
+        
     for f in tqdm(wav_files):
         try:
-            c += 1
+
+            #if(c == count):
+            #    print(F"\nSono arrivato ad un count pari a: {count}")
+            #    print("Passo, quindi, alla prossima cartella")
+            #    break
+            #else:
+            #    c += 1
             
             # Impostiamo un random seed ogni volta
             random.seed(time.process_time())
@@ -183,23 +193,24 @@ def computeTransformation(wav_files, WAV_DIR):
             y = np.append(y[0], y[1:] - pre_emphasis * y[:-1])
             
             # Compute spectrogram
-            M = librosa.feature.melspectrogram(y, sr, 
-                                               fmax = sr/2, # Maximum frequency to be used on the on the MEL scale
-                                               n_fft=2048, 
-                                               hop_length=512, 
-                                               n_mels = 96, # As per the Google Large-scale audio CNN paper
-                                               power = 2) # Power = 2 refers to squared amplitude
+            #M = librosa.feature.melspectrogram(y, sr, 
+                                               #fmax = sr/2, # Maximum frequency to be used on the on the MEL scale
+                                               #n_fft=2048, 
+                                               #hop_length=512, 
+                                               #n_mels = 96, # As per the Google Large-scale audio CNN paper
+                                               #power = 2) # Power = 2 refers to squared amplitude
             
             # Power in DB
-            log_power = librosa.power_to_db(M, ref=np.max)# Covert to dB (log) scale
+            #log_power = librosa.power_to_db(M, ref=np.max)# Covert to dB (log) scale
             
             # Plotting the spectrogram and save as JPG without axes (just the image)
-            pylab.figure(figsize=(3,3))
-            pylab.axis('off') 
-            pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
-            librosa.display.specshow(log_power, cmap=cm.jet)
+            #pylab.figure(figsize=(3,3))
+            #pylab.axis('off') 
+            #pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+            #pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+            #librosa.display.specshow(log_power, cmap=cm.jet)
             #pylab.savefig(IMG_DIR + f[:-4]+'.jpg', bbox_inches=None, pad_inches=0)
-            pylab.close()
+            #pylab.close()
             
             #aumento dati in mase a cambiamenti
             '''timeshifter(y, sr)
@@ -211,23 +222,23 @@ def computeTransformation(wav_files, WAV_DIR):
             # Implementa le varie trasformazioni per due volte
             # Ogni volta però, facciamo trasformazioni random
             log_power = alltransformations(y, sr, f, i)
-            pylab.figure(figsize=(3,3))
-            pylab.axis('off') 
-            pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
-            librosa.display.specshow(log_power, cmap=cm.jet)
+            #pylab.figure(figsize=(3,3))
+            #pylab.axis('off') 
+            #pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+            #librosa.display.specshow(log_power, cmap=cm.jet)
             #pylab.savefig(IMG_DIR + f[:-4] +'-1.jpg', bbox_inches=None, pad_inches=0)
-            pylab.close()
+            #pylab.close()
             #print("andato1")
 
             i += 1
             
             log_power = alltransformations(y, sr, f, i)
-            pylab.figure(figsize=(3,3))
-            pylab.axis('off') 
-            pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
-            librosa.display.specshow(log_power, cmap=cm.jet)
+            #pylab.figure(figsize=(3,3))
+            #pylab.axis('off') 
+            #pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+            #librosa.display.specshow(log_power, cmap=cm.jet)
             #pylab.savefig(IMG_DIR + f[:-4] +'-2.jpg', bbox_inches=None, pad_inches=0)
-            pylab.close()
+            #pylab.close()
             #print("andato2")
             
         except Exception as e:
@@ -238,7 +249,7 @@ def computeTransformation(wav_files, WAV_DIR):
 
 RESULT_DIR = 'RESULT_DIR/'
 
-# Se non esiste la cartella delle immagini, la creiamo
+# Se non esiste la cartella dei risultati, la creiamo
 if not os.path.exists(RESULT_DIR):
     os.makedirs(RESULT_DIR)
 
@@ -249,10 +260,6 @@ folders = os.listdir(datasetsDirectory)
 folders.remove('15 Free Ambient Sound Effects')
 
 for folder in folders:
-    
-    # Per ora skippiamo
-    if folder == 'wav_DEMoS':
-        continue
     
     # Filtriamo la lista delle cartelle prendendo solamente "training_data"
     train = os.listdir(os.path.join(datasetsDirectory, folder))
@@ -267,7 +274,7 @@ for folder in folders:
             # ci interessano (.wav)
             trainingSingleDir = os.path.join(datasetsDirectory, folder, train, files + "/").replace('\\','/')
             wav_files = os.listdir(trainingSingleDir)
-        
+
             print('-------------------------')
             print(F"Trasformo la cartella: {os.path.join(folder,files)}")
             computeTransformation(wav_files, trainingSingleDir)
