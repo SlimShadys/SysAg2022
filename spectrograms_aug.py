@@ -94,7 +94,7 @@ def noiseback(y,sr):
     #pylab.savefig(IMG_DIR + f[:-4]+'-3.jpg', bbox_inches=None, pad_inches=0)
     #pylab.close()
 
-def alltransformations(y, sr, fileName, i, training_dir):
+def alltransformations(y, sr, fileName, i, training_dir, dataFrame):
     # time shift
     start_ = int(np.random.uniform(-4800,4800))
     #print('time shift: ',start_)
@@ -128,9 +128,9 @@ def alltransformations(y, sr, fileName, i, training_dir):
     ipd.Audio(wav_speed_tune, rate=sr)
     
     #rumori di sottofondo
-    bg_files = os.listdir('Datasets/15 Free Ambient Sound Effects/')
-    chosen_bg_file = bg_files[np.random.randint(len(bg_files))]
-    bg, sr = librosa.load('Datasets/15 Free Ambient Sound Effects/'+chosen_bg_file, sr=16000)
+    randomBG = np.random.randint(len(dataFrame))
+    bg = dataFrame.at[randomBG,'bg']
+    sr = dataFrame.at[randomBG,'sr']
     #print(chosen_bg_file,'|', bg.shape[0], bg.max(), bg.min())
     ipd.Audio(bg, rate=sr) # !! be prepared when playing the noise, bacause it's so ANNOYING !!
     start_ = np.random.randint(bg.shape[0]-y.shape[0])
@@ -162,7 +162,22 @@ def alltransformations(y, sr, fileName, i, training_dir):
 
 def computeTransformation(wav_files):
     log_power = []
-        
+
+    # Pre-load ambient sounds
+    print('-------------------------')    
+    print("Pre-carico i suoni di sottofondo...")
+    bg_files = os.listdir('Datasets/15 Free Ambient Sound Effects/')
+    df = pd.DataFrame(columns=['bg','sr'])
+    
+    for bg_file in tqdm(bg_files):
+        bg, sr = librosa.load('Datasets/15 Free Ambient Sound Effects/'+bg_file, sr=16000)
+        df = df.append({
+            "bg" : bg,
+            "sr" : sr
+            }, ignore_index=True)
+
+    print('-------------------------')
+    print("Creo i file di data augmentation..")
     for f in tqdm(wav_files):
         try:
             
@@ -208,7 +223,7 @@ def computeTransformation(wav_files):
             
             # Implementa le varie trasformazioni per due volte
             # Ogni volta però, facciamo trasformazioni random
-            log_power = alltransformations(y, sr, f, i, training_dir)
+            log_power = alltransformations(y, sr, f, i, training_dir, df)
             #pylab.figure(figsize=(3,3))
             #pylab.axis('off') 
             #pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
@@ -221,7 +236,7 @@ def computeTransformation(wav_files):
             # Impostiamo un random seed ogni volta
             random.seed(time.process_time())
             
-            log_power = alltransformations(y, sr, f, i, training_dir)
+            log_power = alltransformations(y, sr, f, i, training_dir, df)
             #pylab.figure(figsize=(3,3))
             #pylab.axis('off') 
             #pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
