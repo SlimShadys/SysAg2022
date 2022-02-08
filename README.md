@@ -13,20 +13,13 @@ pip install opencv-python librosa googledrivedownloader tqdl
 ```
 python downloadDatasets.py
 ```
-
 ## Splitting
 ```
-python splittingDatasets.py
+python makeCSV.py
 ```
-
 ## Data Augmentation
 ```
 python spectrograms_aug.py
-```
-
-## CSV informations
-```
-python makeCSV.py
 ```
 
 - Gianmarco Scarano
