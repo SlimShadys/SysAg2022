@@ -8,6 +8,8 @@ import librosa.display
 import numpy as np
 import pylab
 import soundfile as sf
+import pandas as pd
+
 
 from matplotlib import cm
 from tqdm import tqdm
@@ -92,7 +94,7 @@ def noiseback(y,sr):
     #pylab.savefig(IMG_DIR + f[:-4]+'-3.jpg', bbox_inches=None, pad_inches=0)
     #pylab.close()
 
-def alltransformations(y,sr,fileName,i):
+def alltransformations(y, sr, fileName, i, training_dir):
     # time shift
     start_ = int(np.random.uniform(-4800,4800))
     #print('time shift: ',start_)
@@ -134,19 +136,17 @@ def alltransformations(y,sr,fileName,i):
     start_ = np.random.randint(bg.shape[0]-y.shape[0])
     bg_slice = bg[start_ : start_+ wav_speed_tune.shape[0]]
     
-    # Abbiamo bisogno di riaggiungere di nuovo il WAV relativo allo speed?
-    # Semplicemente, impostiamo il file WAV del Background e successivamente uniamo
-    # i 3 array (Time shift -> Speed -> Background) in un unica variabile "finalArray"
-    
     #wav_with_bg = wav_speed_tune * np.random.uniform(0.8, 1.2) + bg_slice * np.random.uniform(0, 0.1)
+    
     wav_with_bg = bg_slice * np.random.uniform(0, 0.1)
-
     ipd.Audio(wav_with_bg, rate=sr) 
     
-    finalArray = np.add(np.add(wav_time_shift,wav_speed_tune), wav_with_bg)
+    finalArray = np.add(wav_speed_tune, wav_with_bg)
+    
+    newName = fileName.split("/")[2].split(".")[0] + "_" + str(i) + ".wav"
     
     # Ci salviamo l'audio modificato
-    sf.write(os.path.join(RESULT_DIR, folder, fileName.split(".")[0] + "_" + str(i) + ".wav").replace('\\','/'), finalArray, sr)
+    sf.write(os.path.join(training_dir, newName).replace('\\','/'), finalArray, sr)
     
     #M = librosa.feature.melspectrogram(wav_with_bg, sr, 
     #   fmax = sr/2, # Maximum frequency to be used on the on the MEL scale
@@ -160,33 +160,20 @@ def alltransformations(y,sr,fileName,i):
     #return log_power
     return
 
-
-def computeTransformation(wav_files, WAV_DIR):
+def computeTransformation(wav_files):
     log_power = []
-    c = 0
-
-    count = len(wav_files)
         
     for f in tqdm(wav_files):
         try:
-
-            #if(c == count):
-            #    print(F"\nSono arrivato ad un count pari a: {count}")
-            #    print("Passo, quindi, alla prossima cartella")
-            #    break
-            #else:
-            #    c += 1
+            
+            dataSet = f.split("/")[0]
+            training_dir = os.path.join(datasetsDirectory, dataSet, "{}_augmentation".format(dataSet)).replace('\\','/')
             
             # Impostiamo un random seed ogni volta
             random.seed(time.process_time())
 
             # Read wav-file
-            y, sr = librosa.load(WAV_DIR+f, sr = 16000) # Use the default sampling rate of 22,050 Hz
-            
-            if not os.path.exists(os.path.join(RESULT_DIR, folder).replace('\\','/')):
-                os.makedirs(os.path.join(RESULT_DIR, folder).replace('\\','/'))
-            
-            sf.write(os.path.join(RESULT_DIR, folder, f).replace('\\','/'), y, sr)
+            y, sr = librosa.load(os.path.join(datasetsDirectory,f), sr = 16000) # Use the default sampling rate of 22,050 Hz
             
             # Pre-emphasis filter
             pre_emphasis = 0.97
@@ -221,25 +208,26 @@ def computeTransformation(wav_files, WAV_DIR):
             
             # Implementa le varie trasformazioni per due volte
             # Ogni volta però, facciamo trasformazioni random
-            log_power = alltransformations(y, sr, f, i)
+            log_power = alltransformations(y, sr, f, i, training_dir)
             #pylab.figure(figsize=(3,3))
             #pylab.axis('off') 
             #pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
             #librosa.display.specshow(log_power, cmap=cm.jet)
             #pylab.savefig(IMG_DIR + f[:-4] +'-1.jpg', bbox_inches=None, pad_inches=0)
             #pylab.close()
-            #print("andato1")
 
             i += 1
+
+            # Impostiamo un random seed ogni volta
+            random.seed(time.process_time())
             
-            log_power = alltransformations(y, sr, f, i)
+            log_power = alltransformations(y, sr, f, i, training_dir)
             #pylab.figure(figsize=(3,3))
             #pylab.axis('off') 
             #pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
             #librosa.display.specshow(log_power, cmap=cm.jet)
             #pylab.savefig(IMG_DIR + f[:-4] +'-2.jpg', bbox_inches=None, pad_inches=0)
             #pylab.close()
-            #print("andato2")
             
         except Exception as e:
             print(f, e)
@@ -247,38 +235,39 @@ def computeTransformation(wav_files, WAV_DIR):
 
 # ---------------------- MAIN ---------------------- #
 
-RESULT_DIR = 'RESULT_DIR/'
+datasetsDirectory = 'Datasets/'
 
 # Se non esiste la cartella dei risultati, la creiamo
-if not os.path.exists(RESULT_DIR):
-    os.makedirs(RESULT_DIR)
+if not os.path.exists(datasetsDirectory):
+    print("La cartella relativa ai Datasets non esiste!")
+    print("Creare la cartella ''Datasets'' e inserirci i dataset necessari.")
+    exit(0)
 
-datasetsDirectory = 'Datasets/'
 folders = os.listdir(datasetsDirectory)
 
-# Non ci interessa effettuare trasformazioni ai suoni relativi ai rumori
-folders.remove('15 Free Ambient Sound Effects')
+folders = list(filter(lambda x: not x.endswith(".csv") and not x == '15 Free Ambient Sound Effects', folders))
 
 for folder in folders:
     
-    # Filtriamo la lista delle cartelle prendendo solamente "training_data"
-    train = os.listdir(os.path.join(datasetsDirectory, folder))
-    train = str(list(filter(lambda x: 'training_data' in x, train))[0])
-
-    if (len(train) > 0):
-        directory = os.listdir(os.path.join(datasetsDirectory, folder, train))
+    dataAugmentation = "{}_augmentation".format(folder)
     
-        for files in directory:
+    if not(os.path.exists(os.path.join(datasetsDirectory,folder,dataAugmentation))):
+           os.makedirs(os.path.join(datasetsDirectory,folder,dataAugmentation))
     
-            # Controlliamo tutti i file e filtriamo solamente per i file che
-            # ci interessano (.wav)
-            trainingSingleDir = os.path.join(datasetsDirectory, folder, train, files + "/").replace('\\','/')
-            wav_files = os.listdir(trainingSingleDir)
+columns = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
+df = pd.read_csv('{}/train.csv'.format(datasetsDirectory), sep=";", usecols=columns)
+wav_files = df['NOME_FILE'].tolist() #you can also use df['column_name']
 
-            print('-------------------------')
-            print(F"Trasformo la cartella: {os.path.join(folder,files)}")
-            computeTransformation(wav_files, trainingSingleDir)
-            print('\n')
-    else:
-        print("Sei sicuro che esista una cartella di training in: {RESULT_DIR+datasetsDirectory+folder}?")
+if(len(wav_files) > 0):
+    
+    #wav_files = wav_files[:2742]     # -> Gianmarco
+    #wav_files = wav_files[2742:5485] # -> Afrim
+    #wav_files = wav_files[5485:]     # -> Pio
+    
+    print('-------------------------')
+    print(F"Trasformo la cartella: {os.path.join(datasetsDirectory, folder)}")
+    computeTransformation(wav_files)
+    print('\n')
+else:
+    print("Sei sicuro che esista un CSV di training in: {datasetsDirectory}?")
     

@@ -38,7 +38,7 @@ for folder in folders:
     
     # Per ogni sottocartella
     #
-    # Es. Datasets/wav_DEMoS/test_data/NEU
+    # Es. Datasets/emovo/f1
     for singleDir in dirs:
         
         # Controlliamo tutti i file e filtriamo solamente per i file che
@@ -53,15 +53,13 @@ for folder in folders:
         else:
             continue
         
-        cartellaTrainingFinale = os.path.join(trainingDataDirectory,singleDir)
-        cartellaTestingFinale = os.path.join(testDataDirectory,singleDir)
         
         # Se non esistono queste cartelle, le creo
-        if not os.path.exists(cartellaTrainingFinale):
-            os.makedirs(cartellaTrainingFinale)
+        if not os.path.exists(trainingDataDirectory):
+            os.makedirs(trainingDataDirectory)
             
-        if not os.path.exists(cartellaTestingFinale):
-            os.makedirs(cartellaTestingFinale)
+        if not os.path.exists(testDataDirectory):
+            os.makedirs(testDataDirectory)
         
         # Mi calcolo, in percentuale, il numero di file contenuti in ogni cartella
         # - 80% per il training
@@ -73,7 +71,7 @@ for folder in folders:
         # il resto (20%), li trasferisco nella cartella relativa al testing
         for i in tqdm.trange(trainingPerc):
             source = os.path.join(datasetsDirectory,folder,singleDir,files[i])
-            dest = os.path.join(trainingDataDirectory,singleDir,files[i]).replace('\\','/')
+            dest = os.path.join(trainingDataDirectory,files[i]).replace('\\','/')
             shutil.copyfile(source, dest)
 
         # Quando passeremo ai file di test, aumentiamo la variabile i (relativa al)
@@ -83,5 +81,5 @@ for folder in folders:
 
         for j in tqdm.trange(testingPerc):
             source = os.path.join(datasetsDirectory,folder,singleDir,files[i+j])
-            dest = os.path.join(testDataDirectory,singleDir,files[i+j])
+            dest = os.path.join(testDataDirectory,files[i+j])
             shutil.copyfile(source, dest)

@@ -1,13 +1,55 @@
 import csv
 import os
-import shutil
+import tqdm
 
-def makeEmovoValidationCSV():
+def percentage(perc, totale):
+  return round((perc * totale) / 100.0)
+
+def getValues(nomeFile):
+    emozione = ""
+    valenza = ""
+    arousal = ""
+    
+    if (nomeFile == 'dis'):
+        emozione = "Disgusto"
+        valenza = "Negativa"
+        arousal = "Bassa" 
+    elif (nomeFile == 'gio') :
+        emozione = "Gioia"
+        valenza = "Positiva"
+        arousal = "Alta"
+    elif (nomeFile == 'pau'):
+        emozione = "Paura"
+        valenza = "Neutrale"
+        arousal = "Alta"
+    elif (nomeFile == 'rab'):
+        emozione = "Rabbia"
+        valenza = "Negativa"
+        arousal = "Alta"
+    elif (nomeFile == 'sor'):
+        emozione = "Sorpresa"
+        valenza = "Positiva"
+        arousal = "Media"
+    elif (nomeFile == 'tri'):
+        emozione = "Tristezza"
+        valenza = "Negativa"
+        arousal = "Bassa"
+    elif (nomeFile == 'col'):
+        emozione = "Colpa"
+        valenza = "Negativa"
+        arousal = "Bassa"
+    else :
+       emozione = "Neutrale"
+       valenza = "Neutrale"
+       arousal = "Media"
+    return emozione, valenza, arousal
+
+def makeEmovoValidationCSV(dataset):
     
     # nome_file, emozione, valenza, arousal
     header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
     
-    with open('CSV/emovo_Test.csv', 'w', encoding='UTF8',newline='') as f:
+    with open('{}/emovo_Test.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';', quotechar='|', 
                             quoting=csv.QUOTE_MINIMAL, 
                             lineterminator="\n")
@@ -15,104 +57,59 @@ def makeEmovoValidationCSV():
         # scriviamo la riga
         writer.writerow(header)
         f.close()
-               
-        testDataDirectory = os.path.join(datasetsDirectory, 'emovo') + '/test_data/'
-        dirs = os.listdir(testDataDirectory)
-        
-        for singleDir in dirs:
-            files = os.listdir(os.path.join(testDataDirectory,singleDir))
+                      
+        for wav_file in tqdm.tqdm(dataset):
             
-            if(singleDir == 'f1' or singleDir == 'f2' or singleDir == 'f3'):
+            genereFile = wav_file.split("-")[1]
+            if(genereFile == 'f1' or genereFile == 'f2' or genereFile == 'f3'):
                 genere = 'Donna'
             else:
                 genere = 'Uomo'
-            
-            for wav_file in files:
-                
-                if (wav_file[0:3] == 'tri'):
-                   emozione = 'Tristezza'
-                   valenza = "Negativa"
-                   arousal = "Bassa" 
-                else:
-                   emozione = 'Sorpresa'
-                   valenza = "Positiva"
-                   arousal = "Media"
-                     
-                riga = [wav_file, emozione, valenza, arousal, genere]
-               
-                with open('CSV/emovo_Test.csv', 'a', encoding='UTF8',newline='') as f:
-                     writer = csv.writer(f,delimiter=';', quotechar='|', 
-                                         quoting=csv.QUOTE_MINIMAL, 
-                                         lineterminator="\n")
-                     # scriviamo la riga
-                     writer.writerow(riga)   
-                     f.close()
-
-def makeEmovoTrainingCSV():
-    
-    # nome_file, emozione, valenza, arousal
-    header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
-    
-    with open('CSV/emovo_Training.csv', 'w', encoding='UTF8',newline='') as f:
-        writer = csv.writer(f,delimiter=';', quotechar='|', 
-                            quoting=csv.QUOTE_MINIMAL, 
-                            lineterminator="\n")
-        
-        # scriviamo la riga
-        writer.writerow(header)
-        f.close()
-               
-        trainingDataDirectory = os.path.join(resultDir, 'emovo')
-
-        files = os.listdir(trainingDataDirectory)
-            
-        for wav_file in files:
             
             nomeFile = wav_file[0:3]
             
-            voceAttore = wav_file.split("-")[1]
+            emozione, valenza, arousal = getValues(nomeFile)
+
+            riga = [os.path.join('emovo') + '/{}/'.format(genereFile) + wav_file, emozione, valenza, arousal, genere]
+           
+            with open('{}/emovo_Test.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+                 writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                     quoting=csv.QUOTE_MINIMAL, 
+                                     lineterminator="\n")
+                 # scriviamo la riga
+                 writer.writerow(riga)   
+                 f.close()
+
+def makeEmovoTrainingCSV(dataset):
+    
+    # nome_file, emozione, valenza, arousal
+    header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
+    
+    with open('{}/emovo_Training.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                            quoting=csv.QUOTE_MINIMAL, 
+                            lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
             
-            if(voceAttore == 'f1' or voceAttore == 'f2' or voceAttore == 'f3'):
+        for wav_file in tqdm.tqdm(dataset):
+            
+            nomeFile = wav_file[0:3]
+            
+            genereFile = wav_file.split("-")[1]
+            
+            if(genereFile == 'f1' or genereFile == 'f2' or genereFile == 'f3'):
                 genere = 'Donna'
             else:
                 genere = 'Uomo'
             
-            if (nomeFile == 'dis'):
-                emozione = "Disgusto"
-                valenza = "Negativa"
-                arousal = "Bassa" 
-            elif (nomeFile == 'gio') :
-                emozione = "Gioia"
-                valenza = "Positiva"
-                arousal = "Alta"
-            elif (nomeFile == 'pau'):
-                emozione = "Paura"
-                valenza = "Neutrale"
-                arousal = "Alta"
-            elif (nomeFile == 'rab'):
-                emozione = "Rabbia"
-                valenza = "Negativa"
-                arousal = "Alta"
-            elif (nomeFile == 'sor'):
-                emozione = "Sorpresa"
-                valenza = "Positiva"
-                arousal = "Media"
-            elif (nomeFile == 'tri'):
-                emozione = "Tristezza"
-                valenza = "Negativa"
-                arousal = "Bassa"
-            elif (nomeFile == 'col'):
-                emozione = "Colpa"
-                valenza = "Negativa"
-                arousal = "Bassa"
-            else :
-               emozione = "Neutrale"
-               valenza = "Neutrale"
-               arousal = "Media" 
+            emozione, valenza, arousal = getValues(nomeFile)
                  
-            riga = [wav_file, emozione, valenza, arousal, genere]
+            riga = [os.path.join('emovo') + '/{}/'.format(genereFile) + wav_file, emozione, valenza, arousal, genere]
            
-            with open('CSV/emovo_Training.csv', 'a', encoding='UTF8',newline='') as f:
+            with open('{}/emovo_Training.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
                  writer = csv.writer(f,delimiter=';', quotechar='|', 
                                      quoting=csv.QUOTE_MINIMAL, 
                                      lineterminator="\n")
@@ -120,12 +117,12 @@ def makeEmovoTrainingCSV():
                  writer.writerow(riga)
                  f.close()
 
-def makeWAV_Demos_ValidationCSV():
+def makeWAV_Demos_ValidationCSV(dataset):
     
     # nome_file, emozione, valenza, arousal
     header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
     
-    with open('CSV/wavDemos_Test.csv', 'w', encoding='UTF8',newline='') as f:
+    with open('{}/wavDemos_Test.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';', quotechar='|', 
                             quoting=csv.QUOTE_MINIMAL, 
                             lineterminator="\n")
@@ -133,78 +130,40 @@ def makeWAV_Demos_ValidationCSV():
         # scriviamo la riga
         writer.writerow(header)
         f.close()
-        
-        testDataDirectory = os.path.join(datasetsDirectory, 'wav_DEMoS') + '/test_data/'
-        
-        dirs = os.listdir(testDataDirectory)
-        
-        # Es. Datasets/wav_Demos/test_data/DEMOS
-        for singleDir in dirs:
+
+        for wav_file in tqdm.tqdm(dataset):
             
-            files = os.listdir(os.path.join(testDataDirectory,singleDir))
+            if(wav_file.startswith("NP") or wav_file.startswith("PR")):
+                voceAttore = wav_file.split("_")[1]
+                cartella = "DEMOS"
+            else:
+                voceAttore = wav_file.split("_")[0]
+                cartella = "NEU"
                 
-            for wav_file in files:
-                
-                if(singleDir == 'DEMOS'):
-                    voceAttore = wav_file.split("_")[1]
-                else:
-                    voceAttore = wav_file.split("_")[0]
-                
-                if(voceAttore == 'f'):
-                    genere = 'Donna'
-                else:
-                    genere = 'Uomo'
-                
-                nomeFile = wav_file[8:11]
+            if(voceAttore == 'f'):
+                genere = 'Donna'
+            else:
+                genere = 'Uomo'
+            
+            nomeFile = wav_file[8:11]
 
-                if (nomeFile == 'dis'):
-                    emozione = "Disgusto"
-                    valenza = "Negativa"
-                    arousal = "Bassa"  
-                elif (nomeFile == 'gio') :
-                    emozione = "Gioia"
-                    valenza = "Positiva"
-                    arousal = "Alta"
-                elif (nomeFile == 'pau'):
-                    emozione = "Paura"
-                    valenza = "Neutrale"
-                    arousal = "Alta"
-                elif (nomeFile == 'rab'):
-                    emozione = "Rabbia"
-                    valenza = "Negativa"
-                    arousal = "Alta"
-                elif (nomeFile == 'sor'):
-                    emozione = "Sorpresa"
-                    valenza = "Positiva"
-                    arousal = "Media"
-                elif (nomeFile == 'tri'):
-                    emozione = "Tristezza"
-                    valenza = "Negativa"
-                    arousal = "Bassa"
-                elif (nomeFile == 'col'):
-                    emozione = "Colpa"
-                    valenza = "Negativa"
-                    arousal = "Bassa"
-                else :
-                   emozione = "Neutrale"
-                   valenza = "Neutrale"
-                   arousal = "Media" 
-                                   
-                header = [wav_file, emozione, valenza, arousal, genere]
-                           
-                with open('CSV/wavDemos_Test.csv', 'a', encoding='UTF8',newline='') as f:
-                    writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                              
-                    # scriviamo la riga
-                    writer.writerow(header)  
-                    f.close()
+            emozione, valenza, arousal = getValues(nomeFile)
+                                           
+            header = [os.path.join('wav_DEMoS') + '/{}/'.format(cartella) + wav_file, emozione, valenza, arousal, genere]
+                       
+            with open('{}/wavDemos_Test.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+                writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+                          
+                # scriviamo la riga
+                writer.writerow(header)  
+                f.close()
 
-def makeWAV_Demos_TrainingCSV():
+def makeWAV_Demos_TrainingCSV(dataset):
     
     # nome_file, emozione, valenza, arousal
     header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
     
-    with open('CSV/wavDemos_Training.csv', 'w', encoding='UTF8',newline='') as f:
+    with open('{}/wavDemos_Training.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';', quotechar='|', 
                             quoting=csv.QUOTE_MINIMAL, 
                             lineterminator="\n")
@@ -212,14 +171,15 @@ def makeWAV_Demos_TrainingCSV():
         # scriviamo la riga
         writer.writerow(header)
         f.close()
-        
-        trainingDataDirectory = os.path.join(resultDir, 'wav_DEMoS')
-        
-        files = os.listdir(trainingDataDirectory)
             
-        for wav_file in files:
+        for wav_file in tqdm.tqdm(dataset):
             
-            voceAttore = wav_file.split("_")[1]
+            if(wav_file.startswith("NP") or wav_file.startswith("PR")):
+                voceAttore = wav_file.split("_")[1]
+                cartella = "DEMOS"
+            else:
+                voceAttore = wav_file.split("_")[0]
+                cartella = "NEU"
             
             if(voceAttore == 'f'):
                 genere = 'Donna'
@@ -228,75 +188,205 @@ def makeWAV_Demos_TrainingCSV():
             
             nomeFile = wav_file[8:11]
 
-            if (nomeFile == 'dis'):
-                emozione = "Disgusto"
-                valenza = "Negativa"
-                arousal = "Bassa"  
-            elif (nomeFile == 'gio') :
-                emozione = "Gioia"
-                valenza = "Positiva"
-                arousal = "Alta"
-            elif (nomeFile == 'pau'):
-                emozione = "Paura"
-                valenza = "Neutrale"
-                arousal = "Alta"
-            elif (nomeFile == 'rab'):
-                emozione = "Rabbia"
-                valenza = "Negativa"
-                arousal = "Alta"
-            elif (nomeFile == 'sor'):
-                emozione = "Sorpresa"
-                valenza = "Positiva"
-                arousal = "Media"
-            elif (nomeFile == 'tri'):
-                emozione = "Tristezza"
-                valenza = "Negativa"
-                arousal = "Bassa"
-            elif (nomeFile == 'col'):
-                emozione = "Colpa"
-                valenza = "Negativa"
-                arousal = "Bassa"
-            else :
-               emozione = "Neutrale"
-               valenza = "Neutrale"
-               arousal = "Media" 
+            emozione, valenza, arousal = getValues(nomeFile)
                                
-            header = [wav_file, emozione, valenza, arousal, genere]
+            header = [os.path.join('wav_DEMoS') + '/{}/'.format(cartella) + wav_file, emozione, valenza, arousal, genere]
                        
-            with open('CSV/wavDemos_Training.csv', 'a', encoding='UTF8',newline='') as f:
+            with open('{}/wavDemos_Training.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
                 writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
                           
                 # scriviamo la riga
                 writer.writerow(header)  
                 f.close()
 
+def makeAllTrainCSV(wav_demos, emovo):
+
+    # nome_file, emozione, valenza, arousal
+    header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
+    
+    with open('{}/train.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()   
+        
+    with open('{}/train.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        
+        for line in tqdm.tqdm(wav_demos):
+            
+            if(line.startswith("NP") or line.startswith("PR")):
+                voceAttore = line.split("_")[1]
+                cartella = "DEMOS"
+            else:
+                voceAttore = line.split("_")[0]
+                cartella = "NEU"
+            
+            if(voceAttore == 'f'):
+                genere = 'Donna'
+            else:
+                genere = 'Uomo'
+            
+            nomeFile = line[8:11]
+
+            emozione, valenza, arousal = getValues(nomeFile)
+                               
+            header = [os.path.join('wav_DEMoS') + '/{}/'.format(cartella) + line, emozione, valenza, arousal, genere]
+            
+            # scriviamo la riga
+            writer.writerow(header)
+            
+        for line_2 in tqdm.tqdm(emovo):
+            nomeFile = line_2[0:3]
+            
+            genereFile = line_2.split("-")[1]
+            
+            if(genereFile == 'f1' or genereFile == 'f2' or genereFile == 'f3'):
+                genere = 'Donna'
+            else:
+                genere = 'Uomo'
+            
+            emozione, valenza, arousal = getValues(nomeFile)
+                 
+            riga = [os.path.join('emovo') + '/{}/'.format(genereFile) + line_2, emozione, valenza, arousal, genere]
+            
+            # scriviamo la riga
+            writer.writerow(riga)
+            
+        f.close()
+        
+    return
+
+def makeAllTestCSV(wav_demos, emovo):
+    # nome_file, emozione, valenza, arousal
+    header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
+    
+    with open('{}/validation.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()     
+
+    with open('{}/validation.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        
+        for line in tqdm.tqdm(wav_demos):
+            
+            if(line.startswith("NP") or line.startswith("PR")):
+                voceAttore = line.split("_")[1]
+                cartella = "DEMOS"
+            else:
+                voceAttore = line.split("_")[0]
+                cartella = "NEU"
+                
+            if(voceAttore == 'f'):
+                genere = 'Donna'
+            else:
+                genere = 'Uomo'
+            
+            nomeFile = line[8:11]
+    
+            emozione, valenza, arousal = getValues(nomeFile)
+                                           
+            header = [os.path.join('wav_DEMoS') + '/{}/'.format(cartella) + line, emozione, valenza, arousal, genere]
+            # scriviamo la riga
+            writer.writerow(header)
+            
+        for line_2 in tqdm.tqdm(emovo):
+            nomeFile = line_2[0:3]
+            
+            genereFile = line_2.split("-")[1]
+            
+            if(genereFile == 'f1' or genereFile == 'f2' or genereFile == 'f3'):
+                genere = 'Donna'
+            else:
+                genere = 'Uomo'
+            
+            emozione, valenza, arousal = getValues(nomeFile)
+                 
+            riga = [os.path.join('emovo') + '/{}/'.format(genereFile) + line_2, emozione, valenza, arousal, genere]
+            writer.writerow(riga)
+        
+        f.close()
+    
+    return
+
 # ---------------------- MAIN ---------------------- #
 
-CSVDirectory = 'CSV/'
-datasetsDirectory = 'Datasets/'
-resultDir = 'RESULT_DIR/'
+AUDIO_FILE_EXTENSION = '.wav'
 
-# Prima puliamo la cartella dei CSV, poi la ricreiamo ogni volta
-# in modo tale da avere sempre una cartella pulita
-if(os.path.exists(CSVDirectory)):
-    shutil.rmtree(CSVDirectory)
-os.makedirs(CSVDirectory)    
+trainReader = []
+testReader = []
+trainingEmovo = []
+testEmovo = []
+trainingWAVDemos = []
+testWAVDemos = []
+emovo = []
+WAVDemos = []
+# --------------------
+
+datasetsDirectory = 'Datasets/'
 
 folders = os.listdir(datasetsDirectory)
 
-# Non ci interessa creare CSV sui suoni relativi ai rumori
-folders.remove('15 Free Ambient Sound Effects')
+# Prima puliamo i file CSV, poi li ricreiamo ogni volta
+# in modo tale da avere sempre file puliti
+for file in folders:
+    if (file.endswith(".csv")):
+        os.remove(os.path.join(datasetsDirectory, file))
+        folders.remove(file)
+    if (file == '15 Free Ambient Sound Effects'):
+        folders.remove(file)
 
-# Emovo
-makeEmovoValidationCSV()
-print("CSV per Emovo Test completato.")
+folders = folders
 
-makeEmovoTrainingCSV()
-print("CSV per Emovo Training completato.")
+for datasetDir in folders:
+    if(datasetDir.endswith(".csv")):
+        continue
+    datasetDirectories = os.listdir(os.path.join(datasetsDirectory, datasetDir))
+    for singleDir in datasetDirectories:
+        files = os.listdir(os.path.join(datasetsDirectory, datasetDir, singleDir))
+        for file in files:
+            if (file.endswith(".wav")):
+                if (datasetDir == 'emovo'):  
+                    emovo.append(file)
+                else:
+                    WAVDemos.append(file)
+
+trainingEmovoPerc = percentage(80, len(emovo))
+trainingWAVPerc = percentage(80, len(WAVDemos))
+
+testEmovo = emovo[trainingEmovoPerc:]
+testWAVDemos = WAVDemos[trainingWAVPerc:]
+
+print("Preparo i dataset..")
+for i in tqdm.trange(trainingEmovoPerc):
+    trainingEmovo.append(emovo[i])
+  
+for j in tqdm.trange(trainingWAVPerc):
+    trainingWAVDemos.append(WAVDemos[j])    
+print("------------------------------")
 
 # wav_Demos
-makeWAV_Demos_ValidationCSV()
-print("CSV per WAV Demos Test completato.")
-
-makeWAV_Demos_TrainingCSV()
+makeWAV_Demos_TrainingCSV(trainingWAVDemos)
 print("CSV per WAV Demos Training completato.")
+print("------------------------------")
+
+makeWAV_Demos_ValidationCSV(testWAVDemos)
+print("CSV per WAV Demos Test completato.")
+print("------------------------------")
+
+# Emovo
+makeEmovoTrainingCSV(trainingEmovo)
+print("CSV per Emovo Training completato.")
+print("------------------------------")
+
+makeEmovoValidationCSV(testEmovo)
+print("CSV per Emovo Test completato.")
+print("------------------------------")
+
+makeAllTrainCSV(trainingWAVDemos, trainingEmovo)
+makeAllTestCSV(testWAVDemos, testEmovo)
+print("\nCSV per train/test unificati completato.")
