@@ -2,11 +2,11 @@ import torch
 import shutil
 
 
-def save_checkpoint(state, is_best, checkpoint_dir, best_model_dir):
-    f_path = checkpoint_dir + '/checkpoint.pt'
+def save_checkpoint(state, is_best, checkpoint_dir, best_model_dir, gender, epoch):
+    f_path = checkpoint_dir + '/checkpoint_{}-epoch_{}.pt'.format(gender,epoch)
     torch.save(state, f_path)
     if is_best:
-        best_fpath = best_model_dir + '/best_model.pt'
+        best_fpath = best_model_dir + '/best_model_{}-epoch_{}.pt'.format(gender,epoch)
         shutil.copyfile(f_path, best_fpath)
 
 
