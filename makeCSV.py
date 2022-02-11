@@ -1,6 +1,14 @@
 import csv
 import os
 import tqdm
+import pandas as pd
+
+# Define any condition here
+def countFemale(x):
+  return x.startswith("f")
+
+def countMale(x):
+  return x.startswith("m")
 
 def percentage(perc, totale):
   return round((perc * totale) / 100.0)
@@ -44,12 +52,40 @@ def getValues(nomeFile):
        arousal = "Media"
     return emozione, valenza, arousal
 
-def makeEmovoValidationCSV(dataset):
+def makeEmovoCSV(dataset):
     
+    Emovo_train = []
+    
+    Emovo_test = []
+    
+    countFemaleTrain = sum(countFemale(x) for x in dataset)
+    countMaleTrain = sum(countMale(x) for x in dataset)
+    
+    percentageCountFemaleTrain = percentage(80, countFemaleTrain)
+    
+    percentageCountMaleTrain = percentage(80, countMaleTrain)
+    
+    c = 0
+    k = 0
+    
+    for directory in dataset:
+        if(directory.startswith("f")):
+            if(c < percentageCountFemaleTrain):
+                Emovo_train.append(directory)
+            else:
+                Emovo_test.append(directory)
+            c += 1
+        else:
+            if(k < percentageCountMaleTrain):
+                Emovo_train.append(directory)
+            else:
+                Emovo_test.append(directory)
+            k += 1
+
     # nome_file, emozione, valenza, arousal
     header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
     
-    with open('{}/emovo_Test.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+    with open('{}/train_emovo_female.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';', quotechar='|', 
                             quoting=csv.QUOTE_MINIMAL, 
                             lineterminator="\n")
@@ -57,35 +93,8 @@ def makeEmovoValidationCSV(dataset):
         # scriviamo la riga
         writer.writerow(header)
         f.close()
-                      
-        for wav_file in tqdm.tqdm(dataset):
-            
-            genereFile = wav_file.split("-")[1]
-            if(genereFile == 'f1' or genereFile == 'f2' or genereFile == 'f3'):
-                genere = 'Donna'
-            else:
-                genere = 'Uomo'
-            
-            nomeFile = wav_file[0:3]
-            
-            emozione, valenza, arousal = getValues(nomeFile)
-
-            riga = [os.path.join('emovo') + '/{}/'.format(genereFile) + wav_file, emozione, valenza, arousal, genere]
-           
-            with open('{}/emovo_Test.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
-                 writer = csv.writer(f,delimiter=';', quotechar='|', 
-                                     quoting=csv.QUOTE_MINIMAL, 
-                                     lineterminator="\n")
-                 # scriviamo la riga
-                 writer.writerow(riga)   
-                 f.close()
-
-def makeEmovoTrainingCSV(dataset):
-    
-    # nome_file, emozione, valenza, arousal
-    header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
-    
-    with open('{}/emovo_Training.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        
+    with open('{}/train_emovo_male.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';', quotechar='|', 
                             quoting=csv.QUOTE_MINIMAL, 
                             lineterminator="\n")
@@ -94,35 +103,7 @@ def makeEmovoTrainingCSV(dataset):
         writer.writerow(header)
         f.close()
             
-        for wav_file in tqdm.tqdm(dataset):
-            
-            nomeFile = wav_file[0:3]
-            
-            genereFile = wav_file.split("-")[1]
-            
-            if(genereFile == 'f1' or genereFile == 'f2' or genereFile == 'f3'):
-                genere = 'Donna'
-            else:
-                genere = 'Uomo'
-            
-            emozione, valenza, arousal = getValues(nomeFile)
-                 
-            riga = [os.path.join('emovo') + '/{}/'.format(genereFile) + wav_file, emozione, valenza, arousal, genere]
-           
-            with open('{}/emovo_Training.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
-                 writer = csv.writer(f,delimiter=';', quotechar='|', 
-                                     quoting=csv.QUOTE_MINIMAL, 
-                                     lineterminator="\n")
-                 # scriviamo la riga
-                 writer.writerow(riga)
-                 f.close()
-
-def makeWAV_Demos_ValidationCSV(dataset):
-    
-    # nome_file, emozione, valenza, arousal
-    header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
-    
-    with open('{}/wavDemos_Test.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+    with open('{}/val_emovo_female.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';', quotechar='|', 
                             quoting=csv.QUOTE_MINIMAL, 
                             lineterminator="\n")
@@ -130,40 +111,156 @@ def makeWAV_Demos_ValidationCSV(dataset):
         # scriviamo la riga
         writer.writerow(header)
         f.close()
-
-        for wav_file in tqdm.tqdm(dataset):
+        
+    with open('{}/val_emovo_male.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                            quoting=csv.QUOTE_MINIMAL, 
+                            lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+        
+        print("Scrivo sul CSV di test per il dataset di Emovo ...")            
+        for directory in Emovo_test:
+            files = os.listdir(os.path.join(datasetsDirectory,"emovo/",directory))
             
-            if(wav_file.startswith("NP") or wav_file.startswith("PR")):
-                voceAttore = wav_file.split("_")[1]
-                cartella = "DEMOS"
-            else:
-                voceAttore = wav_file.split("_")[0]
-                cartella = "NEU"
+            for wav_file in tqdm.tqdm(files):
                 
-            if(voceAttore == 'f'):
-                genere = 'Donna'
-            else:
-                genere = 'Uomo'
+                nomeFile = wav_file[0:3]
+                
+                genereFile = wav_file.split("-")[1]
+                
+                if(genereFile.startswith("f")):
+                    genere = 'Donna'
+                else:
+                    genere = 'Uomo'
+                
+                emozione, valenza, arousal = getValues(nomeFile)
+                     
+                riga = ['/{}/'.format(genereFile) + wav_file, emozione, valenza, arousal, genere]
+               
+                if(directory.startswith("f")) :
+                    genereCartella = "val_emovo_female"
+                else:
+                    genereCartella = "val_emovo_male"
+                
+                with open('{}/{}.csv'.format(datasetsDirectory,genereCartella), 'a', encoding='UTF8',newline='') as f:
+                     writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                         quoting=csv.QUOTE_MINIMAL, 
+                                         lineterminator="\n")
+                     # scriviamo la riga
+                     writer.writerow(riga)
+                     f.close()
+
+        print("\nScrivo sul CSV di train per il dataset di Emovo ...")                     
+        for directory in Emovo_train:
+            files = os.listdir(os.path.join(datasetsDirectory,"emovo/",directory))
             
-            nomeFile = wav_file[8:11]
+            for wav_file in tqdm.tqdm(files):
+                
+                nomeFile = wav_file[0:3]
+                
+                genereFile = wav_file.split("-")[1]
+                
+                if(genereFile.startswith("f")):
+                    genere = 'Donna'
+                else:
+                    genere = 'Uomo'
+                
+                emozione, valenza, arousal = getValues(nomeFile)
+                     
+                riga = ['/{}/'.format(genereFile) + wav_file, emozione, valenza, arousal, genere]
+               
+                if(directory.startswith("f")) :
+                    genereCartella = "train_emovo_female"
+                else:
+                    genereCartella = "train_emovo_male"
+                
+                with open('{}/{}.csv'.format(datasetsDirectory,genereCartella), 'a', encoding='UTF8',newline='') as f:
+                     writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                         quoting=csv.QUOTE_MINIMAL, 
+                                         lineterminator="\n")
+                     # scriviamo la riga
+                     writer.writerow(riga)
+                     f.close()
 
-            emozione, valenza, arousal = getValues(nomeFile)
-                                           
-            header = [os.path.join('wav_DEMoS') + '/{}/'.format(cartella) + wav_file, emozione, valenza, arousal, genere]
-                       
-            with open('{}/wavDemos_Test.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
-                writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                          
-                # scriviamo la riga
-                writer.writerow(header)  
-                f.close()
+def makeWAV_Demos_CSV(dataset):
+   
+    wavdemos_female = []
+    wavdemos_male = []
+                            
+    wavdemos_train = []
+    wavdemos_test = []
+    
+    male = 0
+    female = 0
+    
+    percentageCountFemale = percentage(80, 23)
+    
+    percentageCountMale = percentage(80, 45)
+    
+    for directory in dataset:
+            files = os.listdir(os.path.join(datasetsDirectory, datasetDir, directory))
+            for file in files:
+                if (directory == "DEMOS"):
+                    if (file[8:11] == "col"):
+                        continue
+                    
+                    voceAttore = file.split("_")[1]
+                    if (voceAttore == "f"):
+                        wavdemos_female.append(file)
+                    else:
+                        wavdemos_male.append(file)
+                else:
+                    voceAttore = file.split("_")[0]
+                    if (voceAttore == "f"):
+                        wavdemos_female.append(file)
+                    else:
+                        wavdemos_male.append(file)
+                        
+    wavdemos_male_clone = wavdemos_male
+    for file in wavdemos_male:
+        if(file in wavdemos_male_clone):
+            if(file.startswith("PR") or file.startswith("NP")):
+                speaker = file.split("_")[2]
+                p = list(filter(lambda x: (x.split("_")[2] == speaker or x.split("_")[1] == speaker), wavdemos_male))
+                wavdemos_male_clone = list(set(wavdemos_male_clone) - set(p))
+                if(male < percentageCountMale):
+                    wavdemos_train.extend(p)
+                else:
+                    wavdemos_test.extend(p)
+                male += 1
+ 
+    wavdemos_female_clone = wavdemos_female
+    for file in wavdemos_female:
+        if(file in wavdemos_female_clone):
+            if(file.startswith("PR") or file.startswith("NP")):
+                speaker = file.split("_")[2]
+                p = list(filter(lambda x: (x.split("_")[2] == speaker or x.split("_")[1] == speaker), wavdemos_female))
+                wavdemos_female_clone = list(set(wavdemos_female_clone) - set(p))
+                if(female < percentageCountFemale):
+                    wavdemos_train.extend(p)
+                else:
+                    wavdemos_test.extend(p)
+                female += 1
 
-def makeWAV_Demos_TrainingCSV(dataset):
+    wavdemos_train.sort()
+    wavdemos_test.sort()
     
     # nome_file, emozione, valenza, arousal
     header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
     
-    with open('{}/wavDemos_Training.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+    with open('{}/train_demos_female.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                            quoting=csv.QUOTE_MINIMAL, 
+                            lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+        
+    with open('{}/train_demos_male.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';', quotechar='|', 
                             quoting=csv.QUOTE_MINIMAL, 
                             lineterminator="\n")
@@ -172,145 +269,180 @@ def makeWAV_Demos_TrainingCSV(dataset):
         writer.writerow(header)
         f.close()
             
-        for wav_file in tqdm.tqdm(dataset):
-            
-            if(wav_file.startswith("NP") or wav_file.startswith("PR")):
-                voceAttore = wav_file.split("_")[1]
-                cartella = "DEMOS"
-            else:
-                voceAttore = wav_file.split("_")[0]
-                cartella = "NEU"
-            
-            if(voceAttore == 'f'):
-                genere = 'Donna'
-            else:
-                genere = 'Uomo'
-            
+    with open('{}/val_demos_female.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                            quoting=csv.QUOTE_MINIMAL, 
+                            lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+        
+    with open('{}/val_demos_male.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                            quoting=csv.QUOTE_MINIMAL, 
+                            lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+
+    print("------------------------------")
+    print("Scrivo sul CSV di train per il dataset di WAV_Demos ...")            
+    for wav_file in tqdm.tqdm(wavdemos_train):
+        
+        if(wav_file.startswith("NP") or wav_file.startswith("PR")):
+            voceAttore = wav_file.split("_")[1] 
             nomeFile = wav_file[8:11]
+            cartella = "DEMOS"
+        else:
+            voceAttore = wav_file.split("_")[0]
+            nomeFile = wav_file[5:8]
+            cartella = "NEU"
+        
+        if(voceAttore == 'f'):
+            genere = 'Donna'
+            genereCartella = "train_demos_female"
+        else:
+            genere = 'Uomo'
+            genereCartella = "train_demos_male"
+        
+        emozione, valenza, arousal = getValues(nomeFile)
+                           
+        header = ['/{}/'.format(cartella) + wav_file, emozione, valenza, arousal, genere]
+                   
+        with open('{}/{}.csv'.format(datasetsDirectory, genereCartella), 'a', encoding='UTF8',newline='') as f:
+            writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+                      
+            # scriviamo la riga
+            writer.writerow(header)  
+            f.close()
 
-            emozione, valenza, arousal = getValues(nomeFile)
-                               
-            header = [os.path.join('wav_DEMoS') + '/{}/'.format(cartella) + wav_file, emozione, valenza, arousal, genere]
-                       
-            with open('{}/wavDemos_Training.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
-                writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                          
-                # scriviamo la riga
-                writer.writerow(header)  
-                f.close()
+    print("\nScrivo sul CSV di test per il dataset di WAV_Demos ...")
+    for wav_file in tqdm.tqdm(wavdemos_test):
+        
+        if(wav_file.startswith("NP") or wav_file.startswith("PR")):
+            voceAttore = wav_file.split("_")[1] 
+            nomeFile = wav_file[8:11]
+            cartella = "DEMOS"
+        else:
+            voceAttore = wav_file.split("_")[0]
+            nomeFile = wav_file[5:8]
+            cartella = "NEU"
+        
+        if(voceAttore == 'f'):
+            genere = 'Donna'
+            genereCartella = "val_demos_female"
+        else:
+            genere = 'Uomo'
+            genereCartella = "val_demos_male"
+        
+        emozione, valenza, arousal = getValues(nomeFile)
+                           
+        header = ['/{}/'.format(cartella) + wav_file, emozione, valenza, arousal, genere]
+                   
+        with open('{}/{}.csv'.format(datasetsDirectory, genereCartella), 'a', encoding='UTF8',newline='') as f:
+            writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+                      
+            # scriviamo la riga
+            writer.writerow(header)  
+            f.close()
 
-def makeAllTrainCSV(wav_demos, emovo):
+def makeAllTrainCSV():
 
     # nome_file, emozione, valenza, arousal
     header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
     
-    with open('{}/train.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+    with open('{}/all_train_female.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         
         # scriviamo la riga
         writer.writerow(header)
-        f.close()   
-        
-    with open('{}/train.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+        f.close()
+
+    with open('{}/all_train_male.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         
-        for line in tqdm.tqdm(wav_demos):
-            
-            if(line.startswith("NP") or line.startswith("PR")):
-                voceAttore = line.split("_")[1]
-                cartella = "DEMOS"
-            else:
-                voceAttore = line.split("_")[0]
-                cartella = "NEU"
-            
-            if(voceAttore == 'f'):
-                genere = 'Donna'
-            else:
-                genere = 'Uomo'
-            
-            nomeFile = line[8:11]
-
-            emozione, valenza, arousal = getValues(nomeFile)
-                               
-            header = [os.path.join('wav_DEMoS') + '/{}/'.format(cartella) + line, emozione, valenza, arousal, genere]
-            
-            # scriviamo la riga
-            writer.writerow(header)
-            
-        for line_2 in tqdm.tqdm(emovo):
-            nomeFile = line_2[0:3]
-            
-            genereFile = line_2.split("-")[1]
-            
-            if(genereFile == 'f1' or genereFile == 'f2' or genereFile == 'f3'):
-                genere = 'Donna'
-            else:
-                genere = 'Uomo'
-            
-            emozione, valenza, arousal = getValues(nomeFile)
-                 
-            riga = [os.path.join('emovo') + '/{}/'.format(genereFile) + line_2, emozione, valenza, arousal, genere]
-            
-            # scriviamo la riga
-            writer.writerow(riga)
-            
+        # scriviamo la riga
+        writer.writerow(header)
         f.close()
+ 
+    with open('{}/all_train.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+    
+    a = pd.read_csv("{}/train_demos_female.csv".format(datasetsDirectory))
+    b = pd.read_csv("{}/train_emovo_female.csv".format(datasetsDirectory))
+    result = pd.concat([a, b])
+
+    result.to_csv("{}/all_train_female.csv".format(datasetsDirectory), index=False)
+    
+    # -------------------- #
+    
+    a = pd.read_csv("{}/train_demos_male.csv".format(datasetsDirectory))
+    b = pd.read_csv("{}/train_emovo_male.csv".format(datasetsDirectory))
+    result = pd.concat([a, b])
+
+    result.to_csv("{}/all_train_male.csv".format(datasetsDirectory), index=False)
+
+    # -------------------- #
+
+    a = pd.read_csv("{}/all_train_male.csv".format(datasetsDirectory))
+    b = pd.read_csv("{}/all_train_female.csv".format(datasetsDirectory))
+    result = pd.concat([a, b])
+
+    result.to_csv("{}/all_train.csv".format(datasetsDirectory), index=False)
     return
 
-def makeAllTestCSV(wav_demos, emovo):
+def makeAllTestCSV():
     # nome_file, emozione, valenza, arousal
     header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
     
-    with open('{}/validation.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+    with open('{}/all_val_female.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         
         # scriviamo la riga
         writer.writerow(header)
-        f.close()     
-
-    with open('{}/validation.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+        f.close()
+        
+    with open('{}/all_val_male.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
         writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         
-        for line in tqdm.tqdm(wav_demos):
-            
-            if(line.startswith("NP") or line.startswith("PR")):
-                voceAttore = line.split("_")[1]
-                cartella = "DEMOS"
-            else:
-                voceAttore = line.split("_")[0]
-                cartella = "NEU"
-                
-            if(voceAttore == 'f'):
-                genere = 'Donna'
-            else:
-                genere = 'Uomo'
-            
-            nomeFile = line[8:11]
-    
-            emozione, valenza, arousal = getValues(nomeFile)
-                                           
-            header = [os.path.join('wav_DEMoS') + '/{}/'.format(cartella) + line, emozione, valenza, arousal, genere]
-            # scriviamo la riga
-            writer.writerow(header)
-            
-        for line_2 in tqdm.tqdm(emovo):
-            nomeFile = line_2[0:3]
-            
-            genereFile = line_2.split("-")[1]
-            
-            if(genereFile == 'f1' or genereFile == 'f2' or genereFile == 'f3'):
-                genere = 'Donna'
-            else:
-                genere = 'Uomo'
-            
-            emozione, valenza, arousal = getValues(nomeFile)
-                 
-            riga = [os.path.join('emovo') + '/{}/'.format(genereFile) + line_2, emozione, valenza, arousal, genere]
-            writer.writerow(riga)
-        
+        # scriviamo la riga
+        writer.writerow(header)
         f.close()
+
+    with open('{}/all_val.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+
+    a = pd.read_csv("{}/val_demos_female.csv".format(datasetsDirectory))
+    b = pd.read_csv("{}/val_emovo_female.csv".format(datasetsDirectory))
+    result = pd.concat([a, b])
+
+    result.to_csv("{}/all_val_female.csv".format(datasetsDirectory), index=False)
     
+    # -------------------- #
+    
+    a = pd.read_csv("{}/val_demos_male.csv".format(datasetsDirectory))
+    b = pd.read_csv("{}/val_emovo_male.csv".format(datasetsDirectory))
+    result = pd.concat([a, b])
+
+    result.to_csv("{}/all_val_male.csv".format(datasetsDirectory), index=False)
+
+    # -------------------- #
+
+    a = pd.read_csv("{}/all_val_male.csv".format(datasetsDirectory))
+    b = pd.read_csv("{}/all_val_female.csv".format(datasetsDirectory))
+    result = pd.concat([a, b])
+
+    result.to_csv("{}/all_val.csv".format(datasetsDirectory), index=False)
     return
 
 # ---------------------- MAIN ---------------------- #
@@ -336,57 +468,34 @@ folders = os.listdir(datasetsDirectory)
 for file in folders:
     if (file.endswith(".csv")):
         os.remove(os.path.join(datasetsDirectory, file))
-        folders.remove(file)
-    if (file == '15 Free Ambient Sound Effects'):
-        folders.remove(file)
 
-folders = folders
+folders = list(filter(lambda x: not x.endswith(".csv") and not x == '15 Free Ambient Sound Effects', folders))
 
 for datasetDir in folders:
     if(datasetDir.endswith(".csv")):
         continue
     datasetDirectories = os.listdir(os.path.join(datasetsDirectory, datasetDir))
     for singleDir in datasetDirectories:
-        files = os.listdir(os.path.join(datasetsDirectory, datasetDir, singleDir))
-        for file in files:
-            if (file.endswith(".wav")):
+        if(singleDir == "{}_augmentation".format(datasetDir)):
+            continue
+        for file in os.listdir(os.path.join(datasetsDirectory, datasetDir, singleDir)):
+            if(file.endswith(".wav")):
                 if (datasetDir == 'emovo'):  
-                    emovo.append(file)
+                    emovo.append(singleDir)
                 else:
-                    WAVDemos.append(file)
-
-trainingEmovoPerc = percentage(80, len(emovo))
-trainingWAVPerc = percentage(80, len(WAVDemos))
-
-testEmovo = emovo[trainingEmovoPerc:]
-testWAVDemos = WAVDemos[trainingWAVPerc:]
-
-print("Preparo i dataset..")
-for i in tqdm.trange(trainingEmovoPerc):
-    trainingEmovo.append(emovo[i])
-  
-for j in tqdm.trange(trainingWAVPerc):
-    trainingWAVDemos.append(WAVDemos[j])    
-print("------------------------------")
+                    WAVDemos.append(singleDir)
+                break
 
 # wav_Demos
-makeWAV_Demos_TrainingCSV(trainingWAVDemos)
-print("CSV per WAV Demos Training completato.")
-print("------------------------------")
-
-makeWAV_Demos_ValidationCSV(testWAVDemos)
-print("CSV per WAV Demos Test completato.")
+makeWAV_Demos_CSV(WAVDemos)
+print("\nCSV per WAV Demos Training & Test completato.")
 print("------------------------------")
 
 # Emovo
-makeEmovoTrainingCSV(trainingEmovo)
-print("CSV per Emovo Training completato.")
+makeEmovoCSV(emovo)
+print("\nCSV per Emovo Training & Test completato.")
 print("------------------------------")
 
-makeEmovoValidationCSV(testEmovo)
-print("CSV per Emovo Test completato.")
-print("------------------------------")
-
-makeAllTrainCSV(trainingWAVDemos, trainingEmovo)
-makeAllTestCSV(testWAVDemos, testEmovo)
+makeAllTrainCSV()
+makeAllTestCSV()
 print("\nCSV per train/test unificati completato.")

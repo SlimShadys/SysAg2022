@@ -275,10 +275,6 @@ wav_files = df['NOME_FILE'].tolist() #you can also use df['column_name']
 
 if(len(wav_files) > 0):
     
-    #wav_files = wav_files[:2742]     # -> Gianmarco
-    #wav_files = wav_files[2742:5485] # -> Afrim
-    #wav_files = wav_files[5485:]     # -> Pio
-    
     print('-------------------------')
     print(F"Trasformo la cartella: {os.path.join(datasetsDirectory, folder)}")
     computeTransformation(wav_files)
