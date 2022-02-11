@@ -10,6 +10,7 @@ RESULT_DIR/
 CSV/
 
 ## Ignore __pycache__ directories
+ser-experiment/__pycache__/
 ser-experiment/*/__pycache__/
 ser-experiment/models/*/__pycache__/
 ser-experiment/models/*/*/__pycache__/
