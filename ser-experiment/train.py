@@ -1,28 +1,31 @@
-import os
-import torch
-import nni
 import logging
+import os
 import platform
-if platform.system() == "Linux":
-    from google.colab import drive
-    import shutil
-from nni.utils import merge_parameter
-from config import args, return_args
-from torchvision import transforms
-import torch.nn as nn
-import warnings
-import torch.optim as optim
-from tqdm import tqdm
-from utility.utility import setup_seed
 
-from utility.checkpoint import save_checkpoint
-from models.resnet50.vggface2 import VGGFace2
-from models.se.vggface2_se import VGGFace2SE
+import nni
+import torch
+
+if platform.system() == "Linux":
+    import shutil
+
+import warnings
+
+import torch.nn as nn
+import torch.optim as optim
+from nni.utils import merge_parameter
+from torchvision import transforms
+from tqdm import tqdm
+
+from config import args, return_args
+from dataloader.demos import Demos
+from dataloader.demosemovo import DemosEmovo
+from dataloader.emovo import Emovo
 from models.bam.vggface2_bam import VGGFace2BAM
 from models.cbam.vggface2_cbam import VGGFace2CBAM
-from dataloader.demos import Demos
-from dataloader.emovo import Emovo
-from dataloader.demosemovo import DemosEmovo
+from models.resnet50.vggface2 import VGGFace2
+from models.se.vggface2_se import VGGFace2SE
+from utility.checkpoint import load_checkpoint, save_checkpoint
+from utility.utility import setup_seed
 
 warnings.filterwarnings('ignore')
 
@@ -44,6 +47,7 @@ def main(args):
     print("Momentum: {}".format(args['momentum']))
     print("Optimizer: {}".format(args['optimizer']))
     print("Patience: {}".format(args['patience']))
+    print("Checkpoint model: {}".format(args['checkpoint']))
     print("Stats: {}".format(args['stats']))
     print("Uses Drive: {}".format(args['uses_drive']))
     print("Weight decay: {}".format(args['weight_decay']))
@@ -52,9 +56,13 @@ def main(args):
     if platform.system() == "Linux" and args['uses_drive']:
         print("----------------------------")
         print("** Google Drive Sign In **")
-        drive.mount('/content/gdrive')
-        print("** Successfully logged in! **")
-        print("----------------------------")
+        if not(os.path.exists("../../gdrive/")):
+            print("No Google Drive path detected! Please mount it before running this script or disable ""uses_drive"" flag!")
+            print("----------------------------")
+            exit(0)
+        else:
+            print("** Successfully logged in! **")
+            print("----------------------------")
 
         if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}".format(args["attention"], args["dataset"]))):
            os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}".format(args["attention"], args["dataset"]))
@@ -71,7 +79,7 @@ def main(args):
     
     if not(os.path.exists(os.path.join("result", args['attention'], args['dataset'], "checkpoint"))):
            os.makedirs(os.path.join("result", args['attention'], args['dataset'], "checkpoint"))
-    
+
     if args["stats"] == "imagenet":
         # imagenet
         data_mean = [0.485, 0.456, 0.406]
@@ -157,17 +165,37 @@ def main(args):
     else:
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=args["patience"], mode="max", verbose=True)
     
+    if args['checkpoint']:
+        print("You specified a pre-loading directory for checkpoints.")
+        print(F"The directory is: {args['checkpoint']}")
+        if os.path.isfile(args['checkpoint']):
+            print("=> Loading checkpoint '{}'".format(args['checkpoint']))
+            model, optimizer, scheduler, epoch, val_loss, val_acc = load_checkpoint(args['checkpoint'], model, optimizer, scheduler)
+            start_epoch = epoch
+            best_val_loss = val_loss
+            best_val_acc = val_acc
+            print("- Best validation loss loaded     : {:.8f}".format(best_val_loss))
+            print("- Best validation accuracy loaded : {:.8f}".format(best_val_acc))
+            print("Checkpoint loaded successfully")
+        else:
+            print("=> No checkpoint found at '{}'".format(args['checkpoint']))
+            print("Are you sure the directory / checkpoint exist?")
+        print("-------------------------------------------------------")
+
     print("===================================Start Training===================================")
-    
-    batch_bar_train = tqdm(total=len(train_loader), desc="Batch", position=0)   # Batch_bar for training
-    batch_bar_val = tqdm(total=len(val_loader), desc="Batch", position=0)       # Batch_bar for validation
-    
+       
+    print("\nStarting from epoch: {}".format(start_epoch))
     for e in range(start_epoch, args["epochs"]):
         train_loss = 0
         validation_loss = 0
         train_correct = 0
         val_correct = 0
         is_best = False
+
+        batch_bar_train = tqdm(total=len(train_loader), desc="Batch", position=0)   # Batch_bar for training
+        batch_bar_val = tqdm(total=len(val_loader), desc="Batch", position=0)       # Batch_bar for validation
+        batch_bar_train.clear()
+        batch_bar_val.clear()
     
         # train the model
         model.train()
@@ -226,23 +254,31 @@ def main(args):
             'epoch': e + 1,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(),
-            'scheduler': scheduler.state_dict()
+            'scheduler': scheduler.state_dict(),
+            'best_val_loss': best_val_loss,
+            'best_val_acc': best_val_acc
         }
         
         save_checkpoint(checkpoint, is_best, "result/{}/{}/checkpoint".format(args["attention"], args["dataset"]), "result/{}/{}".format(args["attention"], args["dataset"]), args["gender"], e+1)
     
         if is_best:
-            print(
-                '\nEpoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}% \t[saved]'
-                .format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100))
+            write = "\nEpoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}% \t[saved]\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
+            print(write)
+
             if platform.system() == "Linux" and args['uses_drive']:
-                shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/best_model_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], e+1))
+                shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/best_model_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], e+1))
         else:
-            print(
-                '\nEpoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}%'
-                .format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100))
+            write = "\nEpoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}%\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
+            print(write)
+            
             if platform.system() == "Linux" and args['uses_drive']:
                 shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "/checkpoint/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], e+1))
+
+        if platform.system() == "Linux" and args['uses_drive']:
+            f = open("res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"]), "a")
+            f.write(write)
+            f.close() 
+            shutil.copy("res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"]), "../../gdrive/MyDrive/SysAg2022/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["attention"], args["dataset"], args["gender"]))
         print("------------------------------------------------------")
     
     print("===================================Training Finished===================================")

@@ -4,10 +4,14 @@
 Datasets/
 
 ## Ignore Result files
-RESULT_DIR/
+Results/
 
 ## Ignore CSV files
 CSV/
+
+## Ignore model filenames for now
+*.pt
+*.pth
 
 ## Ignore __pycache__ directories
 ser-experiment/__pycache__/

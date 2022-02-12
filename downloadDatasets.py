@@ -3,6 +3,7 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 from tqdl import download
 import zipfile
 import shutil
+import platform
 
 datasetsDirectory = 'Datasets/'
 
@@ -61,9 +62,18 @@ os.remove(os.path.join(datasetsDirectory, wav_demos_Dataset + ".zip"))
 
 # emovo
 print("\nDownloading emovo dataset...")
-gdd.download_file_from_google_drive(file_id='1SUtaKeA-LYnKaD3qv87Y5wYgihJiNJAo',
-                                    dest_path='./Datasets/' + emovo_Dataset + '.zip',
-                                    unzip=True)
+if platform.system() != "Linux":
+    gdd.download_file_from_google_drive(file_id='1SUtaKeA-LYnKaD3qv87Y5wYgihJiNJAo',
+                                        dest_path='./{}'.format(datasetsDirectory) + emovo_Dataset + '.zip',
+                                        unzip=True)
 
-os.rename(os.path.join(datasetsDirectory,"EMOVO"), os.path.join(datasetsDirectory, emovo_Dataset))
-os.remove(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"))
+    os.rename(os.path.join(datasetsDirectory,"EMOVO"), os.path.join(datasetsDirectory, emovo_Dataset))
+    os.remove(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"))
+else:
+    gdd.download_file_from_google_drive(file_id='1SUtaKeA-LYnKaD3qv87Y5wYgihJiNJAo',
+                                        dest_path='./{}'.format(datasetsDirectory) + emovo_Dataset + '.zip',
+                                        unzip=False)
+
+    shutil.unpack_archive(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"), datasetsDirectory)
+    os.rename(os.path.join(datasetsDirectory,"EMOVO"), os.path.join(datasetsDirectory, "emovo"))
+    os.remove(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"))
