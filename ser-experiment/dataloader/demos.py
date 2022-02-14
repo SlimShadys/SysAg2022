@@ -5,21 +5,22 @@ import librosa
 import librosa.display
 import random
 import time
-import pylab
 import os
+import io
+import matplotlib.pyplot as plt
 from PIL import Image
 
 from matplotlib import cm
 
-def plotFigure(log_power):
-    # Plot the figure
-    log_power = np.array(log_power)
-    pylab.figure(figsize=(3,3))                                         # Set size of figure (300x300)
-    pylab.axis('off')                                                   # Remove axis
-    pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[])   # Remove the white edge
-    librosa.display.specshow(log_power, cmap=cm.jet)                    # Save the spectrogram
-    #pylab.show()                                                        # Show the figure and close it
-    pylab.close()
+def plotFigure(img):    
+    plt.figure(figsize=(3,3))                                         # Set size of figure (300x300)
+    plt.axis('off')                                                   # Remove axis
+    plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[])   # Remove the white edge
+    
+    plt.imshow(img)
+    plt.show()                                                        # Show the figure and close it
+    
+    plt.close()
 
 def getLabel(emozione):
     if (emozione == 'Disgusto'):
@@ -119,15 +120,28 @@ class Demos(data.Dataset):
                                            n_mels = 96,     # As per the Google Large-scale audio CNN paper
                                            power = 2)       # Power = 2 refers to squared amplitude
         
+
+        fig = plt.Figure()
+        plt.figure(figsize=(3,3))                                         # Set size of figure (300x300)
+        plt.axis('off')                                                   # Remove axis
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[])   # Remove the white edge
+                
         # Power in DB
         img = librosa.power_to_db(M, ref=np.max)            # Covert to dB (log) 
-        pylab.figure(figsize=(3,3))                                         # Set size of figure (300x300)
-        pylab.axis('off')                                                   # Remove axis
-        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[])   # Remove the white edge
-        librosa.display.specshow(img, cmap=cm.jet)                    # Save the spectrogram
-        pil = Image.fromarray(img).convert('RGB')
-        pylab.cla()
-        pylab.close()
+
+        librosa.display.specshow(img, cmap=cm.jet)                        # Save the spectrogram
+        
+        fig = plt.gcf()
+        
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        #im = Image.open(buf)
+        
+        pil = Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        
+        plt.cla()
+        plt.close()
         
         if self.transform is not None:
             pil = self.transform(pil)

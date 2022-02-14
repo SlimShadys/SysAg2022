@@ -183,8 +183,9 @@ def main(args):
         print("-------------------------------------------------------")
 
     print("===================================Start Training===================================")
-       
-    print("\nStarting from epoch: {}".format(start_epoch))
+    print(" - Starting from epoch: {}".format(start_epoch))
+    print("====================================================================================")
+
     for e in range(start_epoch, args["epochs"]):
         train_loss = 0
         validation_loss = 0
@@ -274,11 +275,14 @@ def main(args):
             if platform.system() == "Linux" and args['uses_drive']:
                 shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "/checkpoint/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], e+1))
 
+        # Scriviamo i risultati in un file testuale
+        f = open("res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"]), "a")
+        f.write(write)
+        f.close()
+
         if platform.system() == "Linux" and args['uses_drive']:
-            f = open("res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"]), "a")
-            f.write(write)
-            f.close() 
             shutil.copy("res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"]), "../../gdrive/MyDrive/SysAg2022/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["attention"], args["dataset"], args["gender"]))
+
         print("------------------------------------------------------")
     
     print("===================================Training Finished===================================")
