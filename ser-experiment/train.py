@@ -263,14 +263,14 @@ def main(args):
         save_checkpoint(checkpoint, is_best, "result/{}/{}/checkpoint".format(args["attention"], args["dataset"]), "result/{}/{}".format(args["attention"], args["dataset"]), args["gender"], e+1)
     
         if is_best:
-            write = "\nEpoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}% \t[saved]\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
-            print(write)
+            write = "Epoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}% \t[saved]\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
+            print("\n{}".format(write))
 
             if platform.system() == "Linux" and args['uses_drive']:
                 shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/best_model_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], e+1))
         else:
-            write = "\nEpoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}%\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
-            print(write)
+            write = "Epoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}%\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
+            print("\n{}".format(write))
             
             if platform.system() == "Linux" and args['uses_drive']:
                 shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "/checkpoint/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], e+1))

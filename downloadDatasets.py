@@ -1,9 +1,6 @@
 import os
-from google_drive_downloader import GoogleDriveDownloader as gdd
-from tqdl import download
-import zipfile
 import shutil
-import platform
+import gdown
 
 datasetsDirectory = 'Datasets/'
 
@@ -11,22 +8,28 @@ wav_demos_Dataset = 'wav_DEMoS'
 emovo_Dataset = 'emovo'
 ambient_Dataset = '15 Free Ambient Sound Effects'
 
+wav_demos_URL = 'https://drive.google.com/uc?id=1O3b0Rua8_sNBmHlWF4nVgNU2lYOjsS__' 
+emovo_URL = 'https://drive.google.com/uc?id=1AYv_1OROT-wL_OM7QsukQTz9eXJlNknu'
+ambient_URL = 'https://drive.google.com/uc?id=1KrLixTDzI7j8V9k--aj4NL1UTAp13YoA'
+
 # Se non esiste la cartella dei datasets, la creiamo
 if not os.path.exists(datasetsDirectory):
     os.makedirs(datasetsDirectory)
 
+# =============================================================================
+
 # 15 Free Ambient Sound Effects
 print("Downloading 15 Free Ambient Sound Effects dataset...")
-url = "http://pbblogassets.s3.amazonaws.com/uploads/2016/09/15-Free-Ambient-Sound-Effects.zip"
-download(url, os.path.join(datasetsDirectory, "15-Free-Ambient-Sound-Effects.zip"))
-    
-with zipfile.ZipFile(os.path.join(datasetsDirectory,"15-Free-Ambient-Sound-Effects.zip"), 'r') as zipFile:
-    zipFile.extractall(os.path.join(datasetsDirectory, ambient_Dataset))
+
+gdown.download(ambient_URL, os.path.join(datasetsDirectory, ambient_Dataset + '.zip'))
+
+print("Extracting 15 Free Ambient Sound Effects dataset...")
+shutil.unpack_archive(os.path.join(datasetsDirectory, ambient_Dataset + ".zip"), os.path.join(datasetsDirectory, ambient_Dataset))
     
 shutil.rmtree(os.path.join(datasetsDirectory, ambient_Dataset, "__MACOSX").replace('\\','/'))
 
-source_folder = os.path.join(datasetsDirectory, ambient_Dataset, '15 Free Ambient Sound Effects/')
-destination_folder = os.path.join(datasetsDirectory, "15 Free Ambient Sound Effects/")
+source_folder = os.path.join(datasetsDirectory, ambient_Dataset, '{}/'.format(ambient_Dataset))
+destination_folder = os.path.join(datasetsDirectory, '{}/'.format(ambient_Dataset))
 
 for file_name in os.listdir(source_folder):
     # construct full file path
@@ -43,37 +46,37 @@ for file_name in os.listdir(os.path.join(datasetsDirectory, ambient_Dataset, amb
 
 os.rmdir(os.path.join(datasetsDirectory, ambient_Dataset, ambient_Dataset))
 
-os.remove(os.path.join(datasetsDirectory,"15-Free-Ambient-Sound-Effects.zip"))
-
 # =============================================================================
 
 # wav_Demos
 print("\nDownloading wav_DEMoS dataset...")
-gdd.download_file_from_google_drive(file_id='1eAhmyPW8A-O-_BkbjzKYUfta8Mks3h_k',
-                                    dest_path='./Datasets/' + wav_demos_Dataset + '.zip',
-                                    unzip=False)
 
-with zipfile.ZipFile(os.path.join(datasetsDirectory, wav_demos_Dataset + ".zip"), 'r') as zipFile:
-    zipFile.extractall(os.path.join(datasetsDirectory, wav_demos_Dataset))
-    
-os.remove(os.path.join(datasetsDirectory, wav_demos_Dataset + ".zip"))
+gdown.download(wav_demos_URL, './{}/{}.zip'.format(datasetsDirectory, wav_demos_Dataset), quiet=False)
+
+print("Extracting wav_DEMoS dataset...")
+shutil.unpack_archive(os.path.join(datasetsDirectory, wav_demos_Dataset + ".zip"), os.path.join(datasetsDirectory, wav_demos_Dataset))
 
 # =============================================================================
 
 # emovo
 print("\nDownloading emovo dataset...")
-if platform.system() != "Linux":
-    gdd.download_file_from_google_drive(file_id='1SUtaKeA-LYnKaD3qv87Y5wYgihJiNJAo',
-                                        dest_path='./{}'.format(datasetsDirectory) + emovo_Dataset + '.zip',
-                                        unzip=True)
+ 
+gdown.download(emovo_URL, './{}/{}.zip'.format(datasetsDirectory, emovo_Dataset), quiet=False)
 
-    os.rename(os.path.join(datasetsDirectory,"EMOVO"), os.path.join(datasetsDirectory, emovo_Dataset))
-    os.remove(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"))
-else:
-    gdd.download_file_from_google_drive(file_id='1SUtaKeA-LYnKaD3qv87Y5wYgihJiNJAo',
-                                        dest_path='./{}'.format(datasetsDirectory) + emovo_Dataset + '.zip',
-                                        unzip=False)
+print("Extracting emovo dataset...")
+shutil.unpack_archive(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"), datasetsDirectory)
 
-    shutil.unpack_archive(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"), datasetsDirectory)
-    os.rename(os.path.join(datasetsDirectory,"EMOVO"), os.path.join(datasetsDirectory, "emovo"))
-    os.remove(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"))
+os.rename(os.path.join(datasetsDirectory,"EMOVO"), os.path.join(datasetsDirectory, emovo_Dataset))
+
+# =============================================================================
+
+# Cleaning files
+print("\nCleaning files ...")
+
+os.remove(os.path.join(datasetsDirectory, ambient_Dataset + '.zip'))
+os.remove(os.path.join(datasetsDirectory, wav_demos_Dataset + ".zip"))
+os.remove(os.path.join(datasetsDirectory, emovo_Dataset + ".zip"))
+
+for file in os.listdir(datasetsDirectory):
+    if(file.endswith("tmp")):
+        os.remove(os.path.join(datasetsDirectory, file))

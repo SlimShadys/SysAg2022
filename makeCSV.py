@@ -469,7 +469,7 @@ for file in folders:
     if (file.endswith(".csv")):
         os.remove(os.path.join(datasetsDirectory, file))
 
-folders = list(filter(lambda x: not x.endswith(".csv") and not x == '15 Free Ambient Sound Effects', folders))
+folders = list(filter(lambda x: not x.endswith(".csv") and not x == '15 Free Ambient Sound Effects' and not x.endswith("tmp"), folders))
 
 for datasetDir in folders:
     if(datasetDir.endswith(".csv")):
