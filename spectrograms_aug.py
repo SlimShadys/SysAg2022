@@ -178,17 +178,22 @@ def computeTransformation(wav_files):
 
     print('-------------------------')
     print("Creo i file di data augmentation..")
+    wav_files.sort()
     for f in tqdm(wav_files):
         try:
             
-            dataSet = f.split("/")[0]
+            if(f.split("/")[1] == 'DEMOS' or f.split("/")[1] == 'NEU'):
+                dataSet = 'wav_DEMoS'
+            else:
+                dataSet = 'emovo'
+                            
             training_dir = os.path.join(datasetsDirectory, dataSet, "{}_augmentation".format(dataSet)).replace('\\','/')
             
             # Impostiamo un random seed ogni volta
             random.seed(time.process_time())
 
             # Read wav-file
-            y, sr = librosa.load(os.path.join(datasetsDirectory,f), sr = 16000) # Use the default sampling rate of 22,050 Hz
+            y, sr = librosa.load((datasetsDirectory + dataSet + f).replace('\\','/'), sr = 16000) # Use the default sampling rate of 22,050 Hz
             
             # Pre-emphasis filter
             pre_emphasis = 0.97
@@ -270,13 +275,13 @@ for folder in folders:
            os.makedirs(os.path.join(datasetsDirectory,folder,dataAugmentation))
     
 columns = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
-df = pd.read_csv('{}/train.csv'.format(datasetsDirectory), sep=";", usecols=columns)
+df = pd.read_csv('{}/all_train.csv'.format(datasetsDirectory), sep=";", usecols=columns)
 wav_files = df['NOME_FILE'].tolist() #you can also use df['column_name']
 
 if(len(wav_files) > 0):
     
     print('-------------------------')
-    print(F"Trasformo la cartella: {os.path.join(datasetsDirectory, folder)}")
+    print("Trasformo le cartelle: {}, {}".format(folders[0], folders[1]))
     computeTransformation(wav_files)
     print('\n')
 else:

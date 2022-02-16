@@ -77,7 +77,7 @@ class Demos(data.Dataset):
             elif(gender == 'female'):   # CSV Donna
                 self.data = pd.read_csv("{}/train_demos_female.csv".format(datasetDirectory), sep=";", encoding='UTF8')
             else:                       # CSV Generale
-                self.data = pd.read_csv("{}/?.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                self.data = pd.read_csv("{}/train_demos_all.csv".format(datasetDirectory), sep=";", encoding='UTF8')
                 
         elif self.split == "val":
             if(gender == 'male'):       # CSV Uomo
@@ -85,7 +85,7 @@ class Demos(data.Dataset):
             elif(gender == 'female'):   # CSV Donna
                 self.data = pd.read_csv("{}/val_demos_female.csv".format(datasetDirectory), sep=";", encoding='UTF8')
             else:                       # CSV Generale
-                self.data = pd.read_csv("{}/?.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                self.data = pd.read_csv("{}/val_demos_all.csv".format(datasetDirectory), sep=";", encoding='UTF8')
 
     def __len__(self):
         return len(self.data)
@@ -113,7 +113,7 @@ class Demos(data.Dataset):
         y = np.append(y[0], y[1:] - pre_emphasis * y[:-1])
 
         # Creazione spettrogramma e salvataggio in IMG
-        M = librosa.feature.melspectrogram(y, sr, 
+        M = librosa.feature.melspectrogram(y=y, sr=sr, 
                                            fmax = sr/2,     # Maximum frequency to be used on the on the MEL scale
                                            n_fft=2048, 
                                            hop_length=512, 

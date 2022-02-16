@@ -4,7 +4,7 @@
 Datasets/
 
 ## Ignore Result files
-Results/
+Results/Models/
 
 ## Ignore CSV files
 CSV/

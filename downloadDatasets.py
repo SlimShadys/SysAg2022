@@ -8,9 +8,9 @@ wav_demos_Dataset = 'wav_DEMoS'
 emovo_Dataset = 'emovo'
 ambient_Dataset = '15 Free Ambient Sound Effects'
 
-wav_demos_URL = 'https://drive.google.com/uc?id=1O3b0Rua8_sNBmHlWF4nVgNU2lYOjsS__' 
-emovo_URL = 'https://drive.google.com/uc?id=1AYv_1OROT-wL_OM7QsukQTz9eXJlNknu'
-ambient_URL = 'https://drive.google.com/uc?id=1KrLixTDzI7j8V9k--aj4NL1UTAp13YoA'
+wav_demos_URL = 'https://drive.google.com/uc?id=1O3b0Rua8_sNBmHlWF4nVgNU2lYOjsS__&export=download&confirm=t' 
+emovo_URL = 'https://drive.google.com/uc?id=1AYv_1OROT-wL_OM7QsukQTz9eXJlNknu&export=download&confirm=t'
+ambient_URL = 'https://drive.google.com/uc?id=1KrLixTDzI7j8V9k--aj4NL1UTAp13YoA&export=download&confirm=t'
 
 # Se non esiste la cartella dei datasets, la creiamo
 if not os.path.exists(datasetsDirectory):

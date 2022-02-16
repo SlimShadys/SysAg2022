@@ -64,21 +64,20 @@ def main(args):
             print("** Successfully logged in! **")
             print("----------------------------")
 
-        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}".format(args["attention"], args["dataset"]))):
-           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}".format(args["attention"], args["dataset"]))
+        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"]))):
+           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"]))
 
     if(torch.cuda.is_available()):
         device = torch.device("cuda")
         print('Cuda available: {}'.format(torch.cuda.is_available()))
         print("GPU: " + torch.cuda.get_device_name(torch.cuda.current_device()))
+        torch.cuda.empty_cache()
     else:
         device = torch.device("cpu")
         print('Cuda not available. Using CPU.')
-        
-    torch.cuda.empty_cache()
     
-    if not(os.path.exists(os.path.join("result", args['attention'], args['dataset'], "checkpoint"))):
-           os.makedirs(os.path.join("result", args['attention'], args['dataset'], "checkpoint"))
+    if not(os.path.exists(os.path.join("result", args["attention"], args["dataset"], args["gender"], "checkpoint"))):
+           os.makedirs(os.path.join("result", args["attention"], args["dataset"], args["gender"], "checkpoint"))
 
     if args["stats"] == "imagenet":
         # imagenet
@@ -167,10 +166,10 @@ def main(args):
     
     if args['checkpoint']:
         print("You specified a pre-loading directory for checkpoints.")
-        print(F"The directory is: {args['checkpoint']}")
-        if os.path.isfile(args['checkpoint']):
-            print("=> Loading checkpoint '{}'".format(args['checkpoint']))
-            model, optimizer, scheduler, epoch, val_loss, val_acc = load_checkpoint(args['checkpoint'], model, optimizer, scheduler)
+        print("The directory is: {}".format(args["checkpoint"]))
+        if os.path.isfile(args["checkpoint"]):
+            print("=> Loading checkpoint '{}'".format(args["checkpoint"]))
+            model, optimizer, scheduler, epoch, val_loss, val_acc = load_checkpoint(args["checkpoint"], model, optimizer, scheduler)
             start_epoch = epoch
             best_val_loss = val_loss
             best_val_acc = val_acc
@@ -178,12 +177,12 @@ def main(args):
             print("- Best validation accuracy loaded : {:.8f}".format(best_val_acc))
             print("Checkpoint loaded successfully")
         else:
-            print("=> No checkpoint found at '{}'".format(args['checkpoint']))
+            print("=> No checkpoint found at '{}'".format(args["checkpoint"]))
             print("Are you sure the directory / checkpoint exist?")
         print("-------------------------------------------------------")
 
     print("===================================Start Training===================================")
-    print(" - Starting from epoch: {}".format(start_epoch))
+    print(" - Starting from epoch: {}".format(start_epoch+1))
     print("====================================================================================")
 
     for e in range(start_epoch, args["epochs"]):
@@ -260,28 +259,28 @@ def main(args):
             'best_val_acc': best_val_acc
         }
         
-        save_checkpoint(checkpoint, is_best, "result/{}/{}/checkpoint".format(args["attention"], args["dataset"]), "result/{}/{}".format(args["attention"], args["dataset"]), args["gender"], e+1)
+        save_checkpoint(checkpoint, is_best, "result/{}/{}/{}/checkpoint".format(args["attention"], args["dataset"], args["gender"]), "result/{}/{}/{}/best".format(args["attention"], args["dataset"], args["gender"]), args["gender"], e+1)
     
         if is_best:
             write = "Epoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}% \t[saved]\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
             print("\n{}".format(write))
 
             if platform.system() == "Linux" and args['uses_drive']:
-                shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/best_model_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], e+1))
+                shutil.copy("result/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/best_model_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], args["gender"], e+1))
         else:
             write = "Epoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}%\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
             print("\n{}".format(write))
             
             if platform.system() == "Linux" and args['uses_drive']:
-                shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "/checkpoint/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], e+1))
+                shutil.copy("result/{}/{}".format(args["attention"], args["dataset"]) + "/checkpoint/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], args["gender"], e+1))
 
         # Scriviamo i risultati in un file testuale
-        f = open("res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"]), "a")
+        f = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"], args["attention"], args["dataset"], args["gender"]), "a")
         f.write(write)
         f.close()
 
         if platform.system() == "Linux" and args['uses_drive']:
-            shutil.copy("res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"]), "../../gdrive/MyDrive/SysAg2022/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["attention"], args["dataset"], args["gender"]))
+            shutil.copy("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"], args["attention"], args["dataset"], args["gender"]), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"], args["attention"], args["dataset"], args["gender"]))
 
         print("------------------------------------------------------")
     

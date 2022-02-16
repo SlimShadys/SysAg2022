@@ -16,7 +16,7 @@ parser.add_argument("-o", "--optimizer", type=str, default="adam", choices=["ada
 parser.add_argument("-p", "--patience", type=int, default=10, help='Number of epochs without improvements before reducing the learning rate')
 parser.add_argument("-s", "--stats", type=str, default="no", choices=["no", "imagenet"], help='Chose the mean and standard deviation')
 parser.add_argument("-se", "--seed", type=int, default=1, help='Random seed')
-parser.add_argument("-ud","--uses_drive", type=bool, default=True, help='Whether using Drive for saving models / results')
+parser.add_argument("-ud","--uses_drive", type=bool, default=False, help='Whether using Drive for saving models / results')
 parser.add_argument("-w", "--workers", type=int, default=0, help='Set number of workers')
 parser.add_argument("-wd", "--weight_decay", type=float, default=0, help='Value of weight decay')
 
