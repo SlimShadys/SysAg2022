@@ -269,9 +269,9 @@ def computeTransformation(wav_files):
         except Exception as e:
             print(f, e)
             pass
+
+    sortCSV()
         
-
-
 # ---------------------- MAIN ---------------------- #
 
 emovo = []
@@ -305,7 +305,6 @@ df = pd.read_csv('{}/all_train.csv'.format(datasetsDirectory), sep=";", usecols=
 wav_files = df['NOME_FILE'].tolist() #you can also use df['column_name']
 
 if(len(wav_files) > 0):
-    sortCSV()    
     print('-------------------------')
     print("Trasformo le cartelle: {}, {}".format(folders[0], folders[1]))
     computeTransformation(wav_files)
