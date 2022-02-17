@@ -64,8 +64,17 @@ def main(args):
             print("** Successfully logged in! **")
             print("----------------------------")
 
-        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"]))):
-           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"]))
+        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"], "checkpoint"))):
+           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"], "checkpoint"))
+
+        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"], "best"))):
+           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"], "best"))
+
+    if not(os.path.exists(os.path.join("result", args["attention"], args["dataset"], args["gender"], "checkpoint"))):
+           os.makedirs(os.path.join("result", args["attention"], args["dataset"], args["gender"], "checkpoint"))
+
+    if not(os.path.exists(os.path.join("result", args["attention"], args["dataset"], args["gender"], "best"))):
+           os.makedirs(os.path.join("result", args["attention"], args["dataset"], args["gender"], "best"))
 
     if(torch.cuda.is_available()):
         device = torch.device("cuda")
@@ -75,12 +84,6 @@ def main(args):
     else:
         device = torch.device("cpu")
         print('Cuda not available. Using CPU.')
-    
-    if not(os.path.exists(os.path.join("result", args["attention"], args["dataset"], args["gender"], "checkpoint"))):
-           os.makedirs(os.path.join("result", args["attention"], args["dataset"], args["gender"], "checkpoint"))
-
-    if not(os.path.exists(os.path.join("result", args["attention"], args["dataset"], args["gender"], "best"))):
-           os.makedirs(os.path.join("result", args["attention"], args["dataset"], args["gender"], "best"))
 
     if args["stats"] == "imagenet":
         # imagenet
@@ -269,13 +272,13 @@ def main(args):
             print("\n{}".format(write))
 
             if platform.system() == "Linux" and args['uses_drive']:
-                shutil.copy("result/{}/{}/{}/best".format(args["attention"], args["dataset"], args["gender"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/best_model_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], args["gender"], e+1))
+                shutil.copy("result/{}/{}/{}/best".format(args["attention"], args["dataset"], args["gender"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}/best_model_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], "best", args["gender"], e+1))
         else:
             write = "Epoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}%\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
             print("\n{}".format(write))
             
             if platform.system() == "Linux" and args['uses_drive']:
-                shutil.copy("result/{}/{}/{}/checkpoint".format(args["attention"], args["dataset"], args["gender"]) + "/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], args["gender"], e+1))
+                shutil.copy("result/{}/{}/{}/checkpoint".format(args["attention"], args["dataset"], args["gender"]) + "/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], "checkpoint", args["gender"], e+1))
 
         # Scriviamo i risultati in un file testuale
         f = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"], args["attention"], args["dataset"], args["gender"]), "a")
