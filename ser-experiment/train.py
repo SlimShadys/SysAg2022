@@ -49,8 +49,9 @@ def main(args):
     print("Patience: {}".format(args['patience']))
     print("Checkpoint model: {}".format(args['checkpoint']))
     print("Stats: {}".format(args['stats']))
-    print("Uses Drive: {}".format(args['uses_drive']))
+    print("Uses Drive: {}".format(args["uses_drive"]))
     print("Weight decay: {}".format(args['weight_decay']))
+    print("With Augmentation: {}".format(args["withAugmentation"]))
     print("Workers: {}".format(args['workers']))
     
     if platform.system() == "Linux" and args['uses_drive']:
@@ -115,23 +116,23 @@ def main(args):
         ])
     
     if args["dataset"] == "demos":
-        train_data = Demos(gender=args["gender"], split="train", transform=train_preprocess)
-        val_data = Demos(gender=args["gender"], split="val", transform=val_preprocess)
+        train_data = Demos(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = Demos(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
         # TODO: verificare che il numero di classi sia corretto
         classes = 7
     elif args["dataset"]  == "emovo":
-        train_data = Emovo(gender=args["gender"], split="train", transform=train_preprocess)
-        val_data = Emovo(gender=args["gender"], split="val", transform=val_preprocess)
+        train_data = Emovo(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = Emovo(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
         # TODO: verificare che il numero di classi sia corretto
         classes = 7
     elif args["dataset"]  == "demosemovo":
-        train_data = DemosEmovo(gender=args["gender"], split="train", transform=train_preprocess)
-        val_data = DemosEmovo(gender=args["gender"], split="val", transform=val_preprocess)
+        train_data = DemosEmovo(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = DemosEmovo(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
         # TODO: verificare che il numero di classi sia corretto
         classes = 7
     else:
-        train_data = Demos(gender=args["gender"], split="train", transform=train_preprocess)
-        val_data = Demos(gender=args["gender"], split="val", transform=val_preprocess)
+        train_data = Demos(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = Demos(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
         # TODO: verificare che il numero di classi sia corretto
         classes = 7
     

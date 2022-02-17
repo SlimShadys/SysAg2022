@@ -58,7 +58,7 @@ def getEmotion(label):
 
 class Emovo(data.Dataset):
 
-    def __init__(self, gender, split='train', transform=None):
+    def __init__(self, gender, split='train', transform=None, withAugmentation=True):
         if(os.getcwd().endswith("dataloader")):
             datasetDirectory = "../../Datasets"
         else:
@@ -73,24 +73,32 @@ class Emovo(data.Dataset):
 
         if self.split == "train":
             if(gender == 'male'):       # CSV Uomo
-                self.data = pd.read_csv("{}/train_emovo_male.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                csv = pd.read_csv("{}/train_emovo_male.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
             elif(gender == 'female'):   # CSV Donna
-                self.data = pd.read_csv("{}/train_emovo_female.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                csv = pd.read_csv("{}/train_emovo_female.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
             else:                       # CSV Generale
-                self.data = pd.read_csv("{}/train_emovo_all.csv".format(datasetDirectory), sep=";", encoding='UTF8')
-                
+                csv = pd.read_csv("{}/train_emovo_all.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
+
+            # Controlliamo se dobbiamo utilizzare i file di data augmentation o meno
+            if not withAugmentation:
+                csv = csv[~csv['NOME_FILE'].str.contains('/emovo_augmentation', na=False)]
+
+            csv.reset_index(drop=True, inplace=True)
+
+            self.data = csv
+
         elif self.split == "val":
             if(gender == 'male'):       # CSV Uomo
-                self.data = pd.read_csv("{}/val_emovo_male.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                self.data = pd.read_csv("{}/val_emovo_male.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
             elif(gender == 'female'):   # CSV Donna
-                self.data = pd.read_csv("{}/val_emovo_female.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                self.data = pd.read_csv("{}/val_emovo_female.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
             else:                       # CSV Generale
-                self.data = pd.read_csv("{}/val_emovo_all.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                self.data = pd.read_csv("{}/val_emovo_all.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx):  
 
         if(os.getcwd().endswith("dataloader")):
             datasetDirectory = "../../Datasets"
@@ -152,7 +160,7 @@ class Emovo(data.Dataset):
 if __name__ == "__main__":
     split = "train"
     gender = "male"
-    emovo_train = Emovo(gender=gender,split=split)
+    emovo_train = Emovo(gender=gender,split=split,withAugmentation=False)
     print("Emovo {} set successfully loaded".format(split))
     print("Loaded a total of {} samples".format(len(emovo_train)))
 

@@ -18,6 +18,7 @@ parser.add_argument("-s", "--stats", type=str, default="no", choices=["no", "ima
 parser.add_argument("-se", "--seed", type=int, default=1, help='Random seed')
 parser.add_argument("-ud","--uses_drive", type=bool, default=False, help='Whether using Drive for saving models / results')
 parser.add_argument("-w", "--workers", type=int, default=0, help='Set number of workers')
+parser.add_argument("-wa", "--withAugmentation", type=bool, default=False, help='Use augmentation files during training')
 parser.add_argument("-wd", "--weight_decay", type=float, default=0, help='Value of weight decay')
 
 args = parser.parse_args()

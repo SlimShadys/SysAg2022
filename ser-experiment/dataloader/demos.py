@@ -58,7 +58,7 @@ def getEmotion(label):
 
 class Demos(data.Dataset):
 
-    def __init__(self, gender, split='train', transform=None):
+    def __init__(self, gender, split='train', transform=None, withAugmentation=True):
         
         if(os.getcwd().endswith("dataloader")):
             datasetDirectory = "../../Datasets"
@@ -73,19 +73,27 @@ class Demos(data.Dataset):
 
         if self.split == "train":
             if(gender == 'male'):       # CSV Uomo
-                self.data = pd.read_csv("{}/train_demos_male.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                csv = pd.read_csv("{}/train_demos_male.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
             elif(gender == 'female'):   # CSV Donna
-                self.data = pd.read_csv("{}/train_demos_female.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                csv = pd.read_csv("{}/train_demos_female.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
             else:                       # CSV Generale
-                self.data = pd.read_csv("{}/train_demos_all.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                csv = pd.read_csv("{}/train_demos_all.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
+
+            # Controlliamo se dobbiamo utilizzare i file di data augmentation o meno    
+            if not withAugmentation:
+                csv = csv[~csv['NOME_FILE'].str.contains('/wav_DEMoS_augmentation', na=False)]
+
+            csv.reset_index(drop=True, inplace=True)
+
+            self.data = csv
                 
         elif self.split == "val":
             if(gender == 'male'):       # CSV Uomo
-                self.data = pd.read_csv("{}/val_demos_male.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                self.data = pd.read_csv("{}/val_demos_male.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
             elif(gender == 'female'):   # CSV Donna
-                self.data = pd.read_csv("{}/val_demos_female.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                self.data = pd.read_csv("{}/val_demos_female.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
             else:                       # CSV Generale
-                self.data = pd.read_csv("{}/val_demos_all.csv".format(datasetDirectory), sep=";", encoding='UTF8')
+                self.data = pd.read_csv("{}/val_demos_all.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
 
     def __len__(self):
         return len(self.data)
@@ -151,7 +159,7 @@ class Demos(data.Dataset):
 if __name__ == "__main__":
     split = "train"
     gender = "male"
-    demos_train = Demos(gender=gender,split=split)
+    demos_train = Demos(gender=gender,split=split,withAugmentation=True)
     print("Demos {} set successfully loaded".format(split))
     print("Loaded a total of {} samples".format(len(demos_train)))
 
