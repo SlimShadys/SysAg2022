@@ -223,6 +223,30 @@ def makeEmovoCSV(dataset):
                 # scriviamo la riga
                 writer.writerow(riga)
                 f.close()
+            
+            for file_aug in emovo_aug:
+                if(file_aug.split(".")[0].startswith(wav_file.split(".")[0])):
+                    riga  = ['/emovo_augmentation/' + wav_file.split(".")[0] + '_0.wav', emozione, valenza, arousal, genere]
+                    riga2 = ['/emovo_augmentation/' + wav_file.split(".")[0] + '_1.wav', emozione, valenza, arousal, genere]
+
+                    with open('{}/{}.csv'.format(datasetsDirectory,genereCartella), 'a', encoding='UTF8',newline='') as f:
+                        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                            quoting=csv.QUOTE_MINIMAL, 
+                                            lineterminator="\n")
+                        # scriviamo la riga
+                        writer.writerow(riga)
+                        writer.writerow(riga2)
+                        f.close()
+
+                    with open('{}/train_emovo_all.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+                        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                            quoting=csv.QUOTE_MINIMAL, 
+                                            lineterminator="\n")
+                        # scriviamo la riga
+                        writer.writerow(riga)
+                        writer.writerow(riga2)
+                        f.close()
+                    break
 
 def makeWAV_Demos_CSV(dataset):
    
@@ -386,6 +410,30 @@ def makeWAV_Demos_CSV(dataset):
             # scriviamo la riga
             writer.writerow(header)  
             f.close()
+        
+        for file_aug in WAVDemos_aug:
+            if(file_aug.split(".")[0].startswith(wav_file.split(".")[0])):
+                riga  = ['/wav_DEMoS_augmentation/' + wav_file.split(".")[0] + '_0.wav', emozione, valenza, arousal, genere]
+                riga2 = ['/wav_DEMoS_augmentation/' + wav_file.split(".")[0] + '_1.wav', emozione, valenza, arousal, genere]
+
+                with open('{}/{}.csv'.format(datasetsDirectory,genereCartella), 'a', encoding='UTF8',newline='') as f:
+                    writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                        quoting=csv.QUOTE_MINIMAL, 
+                                        lineterminator="\n")
+                    # scriviamo la riga
+                    writer.writerow(riga)
+                    writer.writerow(riga2)
+                    f.close()
+
+                with open('{}/train_emovo_all.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+                    writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                        quoting=csv.QUOTE_MINIMAL, 
+                                        lineterminator="\n")
+                    # scriviamo la riga
+                    writer.writerow(riga)
+                    writer.writerow(riga2)
+                    f.close()
+                break       
 
     print("\nScrivo sul CSV di test per il dataset di WAV_Demos ...")
     for wav_file in tqdm.tqdm(wavdemos_test):
@@ -521,7 +569,27 @@ def makeAllTestCSV():
     result.to_csv("{}/all_val.csv".format(datasetsDirectory), index=False)
     return
 
+def sortCSV():
+    
+    folders = os.listdir(datasetsDirectory)
+    
+    folders = list(filter(lambda x: x.endswith(".csv"), folders))
+    
+    print("Ordino i vari CSV ...")
+    
+    for csvFile in folders:
+        
+        csvData = pd.read_csv("{}/{}".format(datasetsDirectory, csvFile), sep=';')
+        
+        csvData = csvData.reset_index(drop=True)
+        idx = csvData['NOME_FILE'].str.split('/', expand=True).sort_values([2,1,0]).index
+        csvData = csvData.reindex(idx).reset_index(drop=True)
+                
+        csvData.to_csv("{}/{}".format(datasetsDirectory, csvFile), index=False, sep=";")
+
 # ---------------------- MAIN ---------------------- #
+
+augmentationDownloaded = True
 
 AUDIO_FILE_EXTENSION = '.wav'
 
@@ -533,6 +601,8 @@ trainingWAVDemos = []
 testWAVDemos = []
 emovo = []
 WAVDemos = []
+emovo_aug = []
+WAVDemos_aug = []
 # --------------------
 
 datasetsDirectory = 'Datasets/'
@@ -552,7 +622,12 @@ for datasetDir in folders:
         continue
     datasetDirectories = os.listdir(os.path.join(datasetsDirectory, datasetDir))
     for singleDir in datasetDirectories:
-        if(singleDir == "{}_augmentation".format(datasetDir)):
+        if(singleDir == "{}_augmentation".format(datasetDir) and augmentationDownloaded):
+            files = os.listdir(os.path.join(datasetsDirectory, datasetDir, singleDir))
+            if(datasetDir == 'emovo'):
+                emovo_aug.extend(files)
+            else:
+                WAVDemos_aug.extend(files)
             continue
         for file in os.listdir(os.path.join(datasetsDirectory, datasetDir, singleDir)):
             if(file.endswith(".wav")):
@@ -575,3 +650,7 @@ print("------------------------------")
 makeAllTrainCSV()
 makeAllTestCSV()
 print("\nCSV per train/test unificati completato.")
+print("------------------------------")
+
+sortCSV()
+print("\nOrdinamento CSV completato.")
