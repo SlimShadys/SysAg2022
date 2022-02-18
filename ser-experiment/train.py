@@ -65,17 +65,17 @@ def main(args):
             print("** Successfully logged in! **")
             print("----------------------------")
 
-        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"], "checkpoint"))):
-           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"], "checkpoint"))
+        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["dataset"], args["attention"], args["gender"], "checkpoint"))):
+           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["dataset"], args["attention"], args["gender"], "checkpoint"))
 
-        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"], "best"))):
-           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["attention"], args["dataset"], args["gender"], "best"))
+        if not(os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["dataset"], args["attention"], args["gender"], "best"))):
+           os.makedirs("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}".format(args["dataset"], args["attention"], args["gender"], "best"))
 
-    if not(os.path.exists(os.path.join("result", args["attention"], args["dataset"], args["gender"], "checkpoint"))):
-           os.makedirs(os.path.join("result", args["attention"], args["dataset"], args["gender"], "checkpoint"))
+    if not(os.path.exists(os.path.join("result", args["dataset"], args["attention"], args["gender"], "checkpoint"))):
+           os.makedirs(os.path.join("result", args["dataset"], args["attention"], args["gender"], "checkpoint"))
 
-    if not(os.path.exists(os.path.join("result", args["attention"], args["dataset"], args["gender"], "best"))):
-           os.makedirs(os.path.join("result", args["attention"], args["dataset"], args["gender"], "best"))
+    if not(os.path.exists(os.path.join("result", args["dataset"], args["attention"], args["gender"], "best"))):
+           os.makedirs(os.path.join("result", args["dataset"], args["attention"], args["gender"], "best"))
 
     if(torch.cuda.is_available()):
         device = torch.device("cuda")
@@ -180,6 +180,7 @@ def main(args):
             start_epoch = epoch
             best_val_loss = val_loss
             best_val_acc = val_acc
+            print("- Epoch loaded : {}".format(start_epoch))
             print("- Best validation loss loaded     : {:.8f}".format(best_val_loss))
             print("- Best validation accuracy loaded : {:.8f}".format(best_val_acc))
             print("Checkpoint loaded successfully")
@@ -188,26 +189,21 @@ def main(args):
             print("Are you sure the directory / checkpoint exist?")
         print("-------------------------------------------------------")
 
-    print("===================================Start Training===================================")
-    print(" - Starting from epoch: {}".format(start_epoch+1))
-    print("====================================================================================")
-
     for e in range(start_epoch, args["epochs"]):
         train_loss = 0
         validation_loss = 0
         train_correct = 0
         val_correct = 0
         is_best = False
-
-        batch_bar_train = tqdm(total=len(train_loader), desc="Batch", position=0)   # Batch_bar for training
-        batch_bar_val = tqdm(total=len(val_loader), desc="Batch", position=0)       # Batch_bar for validation
-        batch_bar_train.clear()
-        batch_bar_val.clear()
     
+        print(F'Starting Epoch n.{e+1}')
+        print(F"\t- {e * len(train_loader.dataset)} samples processed until now at a learning rate of {args['learning_rate']}")
+        print("-------------------------------------------------------")
+
         # train the model
         model.train()
         
-        for batch_idx, batch in enumerate(train_loader):
+        for batch_idx, batch in enumerate(tqdm(train_loader)):
             images = batch["image"].to(device)
             labels = batch["label"].to(device)
             optimizer.zero_grad()
@@ -219,7 +215,6 @@ def main(args):
             train_loss += loss.item()
             _, preds = torch.max(outputs, 1)
             train_correct += torch.sum(preds == labels.data)
-            batch_bar_train.update(1)
     
         train_loss = train_loss / len(train_loader)
         train_acc = train_correct.double() / len(train_data)
@@ -228,7 +223,7 @@ def main(args):
         model.eval()
             
         print("\nStarting validation...")
-        for batch_idx, batch in enumerate(val_loader):
+        for batch_idx, batch in enumerate(tqdm(val_loader)):
             images = batch["image"].to(device)
             labels = batch["label"].to(device)
     
@@ -238,9 +233,7 @@ def main(args):
                 validation_loss += val_loss.item()
                 _, val_preds = torch.max(val_outputs, 1)
                 val_correct += torch.sum(val_preds == labels.data)
-                
-            batch_bar_val.update(1)
-    
+                    
         validation_loss = validation_loss / len(val_loader)
         val_acc = val_correct.double() / len(val_data)
     
@@ -266,28 +259,60 @@ def main(args):
             'best_val_acc': best_val_acc
         }
         
-        save_checkpoint(checkpoint, is_best, "result/{}/{}/{}/checkpoint".format(args["attention"], args["dataset"], args["gender"]), "result/{}/{}/{}/best".format(args["attention"], args["dataset"], args["gender"]), args["gender"], e+1)
+        save_checkpoint(checkpoint, is_best, "result/{}/{}/{}/checkpoint".format(args["dataset"], args["attention"], args["gender"]), "result/{}/{}/{}/best".format(args["dataset"], args["attention"], args["gender"]), args["gender"], e+1)
     
         if is_best:
-            write = "Epoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}% \t[saved]\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
+            write = 'Epoch[{0}/{1}]\tTraining loss: {training_loss:.8f}\tValidation Loss {validation_loss:.8f}\tTraining Accuracy {training_accuracy:.3f}% \tValidation Accuracy {validation_accuracy:.3f}% [saved]\n'.format(e + 1, args['epochs'], training_loss=train_loss, validation_loss=validation_loss, training_accuracy=train_acc * 100, validation_accuracy=val_acc * 100)
             print("\n{}".format(write))
 
             if platform.system() == "Linux" and args['uses_drive']:
-                shutil.copy("result/{}/{}/{}/best".format(args["attention"], args["dataset"], args["gender"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}/best_model_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], "best", args["gender"], e+1))
+                shutil.copy("result/{}/{}/{}/best".format(args["dataset"], args["attention"], args["gender"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}/best_model_{}-epoch_{}.pt".format(args["dataset"], args["attention"], args["gender"], "best", args["gender"], e+1))
         else:
-            write = "Epoch: {} \tTraining Loss: {:.8f} \tValidation Loss {:.8f} \tTraining Accuracy {:.3f}% \tValidation Accuracy {:.3f}%\n".format(e + 1, train_loss, validation_loss, train_acc * 100, val_acc * 100)
+            write = 'Epoch[{0}/{1}]\tTraining loss: {training_loss:.8f}\tValidation Loss {validation_loss:.8f}\tTraining Accuracy {training_accuracy:.3f}% \tValidation Accuracy {validation_accuracy:.3f}%\n'.format(e + 1, args['epochs'], training_loss=train_loss, validation_loss=validation_loss, training_accuracy=train_acc * 100, validation_accuracy=val_acc * 100)
             print("\n{}".format(write))
             
             if platform.system() == "Linux" and args['uses_drive']:
-                shutil.copy("result/{}/{}/{}/checkpoint".format(args["attention"], args["dataset"], args["gender"]) + "/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["attention"], args["dataset"], args["gender"], "checkpoint", args["gender"], e+1))
-
+                shutil.copy("result/{}/{}/{}/checkpoint".format(args["dataset"], args["attention"], args["gender"]) + "/checkpoint_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}/checkpoint_{}-epoch_{}.pt".format(args["dataset"], args["attention"], args["gender"], "checkpoint", args["gender"], e+1))
+            
         # Scriviamo i risultati in un file testuale
-        f = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"], args["attention"], args["dataset"], args["gender"]), "a")
-        f.write(write)
-        f.close()
-
         if platform.system() == "Linux" and args['uses_drive']:
-            shutil.copy("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"], args["attention"], args["dataset"], args["gender"]), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/res_{}_{}_{}.txt".format(args["attention"], args["dataset"], args["gender"], args["attention"], args["dataset"], args["gender"]))
+
+            if(not os.path.exists("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]))):
+
+                if(not os.path.exists("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]))):
+                    f = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "w")
+                else:
+                    f = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "a")
+                
+                f.write(write)
+                f.close()
+
+                shutil.copy("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]))
+            else:
+                f = open("../../gdrive/MyDrive/SysAg2022/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "r")
+                lines = f.readlines()
+                f.close()
+
+                f2 = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "w")  
+
+                # Riscriviamo tutte le righe precedenti
+                # Sarebbe molto più semplice aprire il file .txt da Google Drive stesso,
+                # ma ciò comporterebbe un errore di scrittura IO (UnsupportedOperation - Python)
+                for line in lines:
+                    f2.write(line)
+                
+                # Scriviamo la nuova riga relativa all'epoch n
+                f2.write(write)
+                f2.close()
+
+                shutil.copy("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]))
+        else:
+            if(not os.path.exists("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]))):
+                f = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "w")
+            else:
+                f = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "a")
+            f.write(write)
+            f.close()
 
         print("------------------------------------------------------")
     

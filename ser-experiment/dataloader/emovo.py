@@ -73,15 +73,15 @@ class Emovo(data.Dataset):
 
         if self.split == "train":
             if(gender == 'male'):       # CSV Uomo
-                csv = pd.read_csv("{}/train_emovo_male.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
+                csv = pd.read_csv("{}/train_{}_male.csv".format(datasetDirectory, dataset), sep=";", encoding='UTF8', index_col=False)
             elif(gender == 'female'):   # CSV Donna
-                csv = pd.read_csv("{}/train_emovo_female.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
+                csv = pd.read_csv("{}/train_{}_female.csv".format(datasetDirectory, dataset), sep=";", encoding='UTF8', index_col=False)
             else:                       # CSV Generale
-                csv = pd.read_csv("{}/train_emovo_all.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
+                csv = pd.read_csv("{}/train_{}_all.csv".format(datasetDirectory, dataset), sep=";", encoding='UTF8', index_col=False)
 
             # Controlliamo se dobbiamo utilizzare i file di data augmentation o meno
             if not withAugmentation:
-                csv = csv[~csv['NOME_FILE'].str.contains('/emovo_augmentation', na=False)]
+                csv = csv[~csv['NOME_FILE'].str.contains('/{}_augmentation'.format(dataset), na=False)]
 
             csv.reset_index(drop=True, inplace=True)
 
@@ -89,11 +89,11 @@ class Emovo(data.Dataset):
 
         elif self.split == "val":
             if(gender == 'male'):       # CSV Uomo
-                self.data = pd.read_csv("{}/val_emovo_male.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
+                self.data = pd.read_csv("{}/val_{}_male.csv".format(datasetDirectory, dataset), sep=";", encoding='UTF8', index_col=False)
             elif(gender == 'female'):   # CSV Donna
-                self.data = pd.read_csv("{}/val_emovo_female.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
+                self.data = pd.read_csv("{}/val_{}_female.csv".format(datasetDirectory, dataset), sep=";", encoding='UTF8', index_col=False)
             else:                       # CSV Generale
-                self.data = pd.read_csv("{}/val_emovo_all.csv".format(datasetDirectory), sep=";", encoding='UTF8', index_col=False)
+                self.data = pd.read_csv("{}/val_{}_all.csv".format(datasetDirectory, dataset), sep=";", encoding='UTF8', index_col=False)
 
     def __len__(self):
         return len(self.data)
