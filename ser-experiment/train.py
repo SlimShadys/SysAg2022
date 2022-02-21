@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import platform
@@ -9,6 +10,7 @@ if platform.system() == "Linux":
     import shutil
 
 import warnings
+from timeit import default_timer as timer
 
 import torch.nn as nn
 import torch.optim as optim
@@ -25,13 +27,43 @@ from models.cbam.vggface2_cbam import VGGFace2CBAM
 from models.resnet50.vggface2 import VGGFace2
 from models.se.vggface2_se import VGGFace2SE
 from utility.checkpoint import load_checkpoint, save_checkpoint
-from utility.utility import setup_seed
+from utility.utility import setup_seed, strfdelta
 
 warnings.filterwarnings('ignore')
 
 setup_seed(args.seed)
 
 logger = logging.getLogger('mnist_AutoML')
+
+
+def estimatedTime(singleTimeEpoch, i, totalEpochs, e, tempoTrascorso):
+
+        epochRimanenti = totalEpochs - e
+
+        if(epochRimanenti == 0):
+            return 0
+
+        if(i == 0):
+            tempoSingoloEpoch = datetime.timedelta(seconds=singleTimeEpoch)
+            tempoTrascorso = tempoSingoloEpoch
+
+            nowDate = datetime.timedelta(seconds = datetime.datetime.now().timestamp())
+            remainingTime = datetime.timedelta(seconds = ((nowDate + datetime.timedelta(seconds=tempoTrascorso.total_seconds() * epochRimanenti)).total_seconds()) - nowDate.total_seconds())
+
+            print("Tempo trascorso in media per un singolo epoch: {}".format(str(tempoTrascorso).split(".")[0]))
+            print("Orario di completamento stimato: {:%H:%M:%S del %d %B %Y} ({})".format(datetime.datetime.now() + datetime.timedelta(seconds=tempoTrascorso.total_seconds() * epochRimanenti), strfdelta(remainingTime,"{D:02} giorni, {H:02} ore, {M:02} minuti rimanenti")))
+        else:
+            tempoSingoloEpoch = datetime.timedelta(seconds=singleTimeEpoch)
+            tempoTrascorso = tempoTrascorso + tempoSingoloEpoch
+            temp = datetime.timedelta(seconds=tempoTrascorso.total_seconds() / (i + 1))
+
+            nowDate = datetime.timedelta(seconds = datetime.datetime.now().timestamp())
+
+            remainingTime = datetime.timedelta(seconds = ((nowDate + datetime.timedelta(seconds=temp.total_seconds() * epochRimanenti)).total_seconds()) - nowDate.total_seconds())
+
+            print("Tempo trascorso in media per un singolo epoch: {}".format(str(temp).split(".")[0]))
+            print("Orario di completamento stimato: {:%H:%M:%S del %d %B %Y} ({})".format(datetime.datetime.now() + datetime.timedelta(seconds=temp.total_seconds() * epochRimanenti), strfdelta(remainingTime,"{D:02} giorni, {H:02} ore, {M:02} minuti rimanenti")))
+        return tempoTrascorso
 
 def main(args):
 
@@ -79,8 +111,11 @@ def main(args):
 
     if(torch.cuda.is_available()):
         device = torch.device("cuda")
+        print("===================================================")
         print('Cuda available: {}'.format(torch.cuda.is_available()))
         print("GPU: " + torch.cuda.get_device_name(torch.cuda.current_device()))
+        print("Total memory: {:.1f} GB".format((float(torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)))))
+        print("===================================================")
         torch.cuda.empty_cache()
     else:
         device = torch.device("cpu")
@@ -153,6 +188,7 @@ def main(args):
     print("Model archticture: ", model)
     
     start_epoch = 0
+    tempoTrascorso = datetime.timedelta(seconds=0)
     
     best_val_loss = 1000000
     best_val_acc = 0
@@ -182,7 +218,7 @@ def main(args):
             best_val_acc = val_acc
             print("- Epoch loaded : {}".format(start_epoch))
             print("- Best validation loss loaded     : {:.8f}".format(best_val_loss))
-            print("- Best validation accuracy loaded : {:.8f}".format(best_val_acc))
+            print("- Best validation accuracy loaded : {:.8f} ({:.3f}%)".format(best_val_acc, best_val_acc * 100))
             print("Checkpoint loaded successfully")
         else:
             print("=> No checkpoint found at '{}'".format(args["checkpoint"]))
@@ -195,14 +231,18 @@ def main(args):
         train_correct = 0
         val_correct = 0
         is_best = False
+        start = 0
+        end = 0
+        i = 0
     
         print(F'Starting Epoch n.{e+1}')
         print(F"\t- {e * len(train_loader.dataset)} samples processed until now at a learning rate of {args['learning_rate']}")
-        print("-------------------------------------------------------")
 
         # train the model
         model.train()
         
+        start = timer()
+
         for batch_idx, batch in enumerate(tqdm(train_loader)):
             images = batch["image"].to(device)
             labels = batch["label"].to(device)
@@ -313,6 +353,11 @@ def main(args):
                 f = open("result/{}/{}/{}/res_{}_{}_{}.txt".format(args["dataset"], args["attention"], args["gender"], args["attention"], args["dataset"], args["gender"]), "a")
             f.write(write)
             f.close()
+
+        end = timer()
+        
+        tempoTrascorso = estimatedTime(end-start, i, args["epochs"], e+1, tempoTrascorso)
+        i += 1
 
         print("------------------------------------------------------")
     
