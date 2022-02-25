@@ -21,6 +21,7 @@ from tqdm import tqdm
 from config import args, return_args
 from dataloader.demos import Demos
 from dataloader.demosemovo import DemosEmovo
+from dataloader.demosemovogender import DemosEmovoGender
 from dataloader.emovo import Emovo
 from models.bam.vggface2_bam import VGGFace2BAM
 from models.cbam.vggface2_cbam import VGGFace2CBAM
@@ -163,6 +164,11 @@ def main(args):
     elif args["dataset"]  == "demosemovo":
         train_data = DemosEmovo(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
         val_data = DemosEmovo(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
+        # TODO: verificare che il numero di classi sia corretto
+        classes = 7
+    elif args["dataset"]  == "demosemovogender":
+        train_data = DemosEmovoGender(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = DemosEmovoGender(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
         # TODO: verificare che il numero di classi sia corretto
         classes = 7
     else:

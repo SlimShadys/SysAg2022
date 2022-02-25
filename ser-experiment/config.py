@@ -16,7 +16,7 @@ parser.add_argument("-a", "--attention", type=str, default="bam", choices=["no",
 parser.add_argument("-bs", "--batch_size", type=int, default=64, help='Batch size to use for training')
 parser.add_argument("-cp", "--checkpoint", type=str, default=None, help='Checkpoint model directory')
 parser.add_argument("-cw", "--class_weights", type=str2bool, const=True, nargs='?', default=False, help='Use the class weights in loss function')
-parser.add_argument("-d", "--dataset", type=str, default="demos", choices=["demos", "emovo", "demosemovo"], help='Choose the dataset')
+parser.add_argument("-d", "--dataset", type=str, default="demos", choices=["demos", "emovo", "demosemovo", "demosemovogender"], help='Choose the dataset')
 parser.add_argument("-e", "--epochs", type=int, default=100, help='Number of epochs')
 parser.add_argument("-g", "--gender", type=str, default="male", choices=["male", "female", "all"], help='Choose the gender of the dataset')
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help='Learning rate to use for training')
