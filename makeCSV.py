@@ -223,7 +223,7 @@ def makeEmovoCSV(dataset):
                 # scriviamo la riga
                 writer.writerow(riga)
                 f.close()
-            
+        
             for file_aug in emovo_aug:
                 if(file_aug.split(".")[0].startswith(wav_file.split(".")[0])):
                     riga  = ['/emovo_augmentation/' + wav_file.split(".")[0] + '_0.wav', emozione, valenza, arousal, genere]
@@ -425,7 +425,7 @@ def makeWAV_Demos_CSV(dataset):
                     writer.writerow(riga2)
                     f.close()
 
-                with open('{}/train_emovo_all.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
+                with open('{}/train_demos_all.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
                     writer = csv.writer(f,delimiter=';', quotechar='|', 
                                         quoting=csv.QUOTE_MINIMAL, 
                                         lineterminator="\n")

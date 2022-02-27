@@ -18,8 +18,10 @@ python downloadDatasets.py
 python makeCSV.py
 ```
 ## Data Augmentation
+###### The files made by the spectrograms augmentation script are already included in the downloaded Datasets. If you want to make new spectrograms, just delete the "{datasetName}_augmentation" folder in each Dataset folder and run this script.
 ```
-python spectrograms_aug.py
+python spectrograms_aug.py    # --> Make spectrograms
+python makeCSV.py             # --> Update CSVs
 ```
 
 # Training

@@ -2,7 +2,6 @@ import os
 import random
 import time
 import cv2
-import csv
 import IPython.display as ipd
 import librosa
 import librosa.display
@@ -92,127 +91,8 @@ def alltransformations(y, sr, fileName, i, training_dir, dataFrame):
     
     # Ci salviamo l'audio modificato
     sf.write(os.path.join(training_dir, newName).replace('\\','/'), finalArray, sr)
-        
-    if(training_dir.split("/")[1] == 'emovo'):
-        nomeFile = fileName.split("/")[2][0:3]
-        
-        genereFile = fileName.split("/")[2].split("-")[1]
-        
-        if(genereFile.startswith("f")):
-            genere = 'Donna'
-            genereCartella = "train_emovo_female"
-            gender = 'female'
-        else:
-            genere = 'Uomo'
-            genereCartella = "train_emovo_male"
-            gender = 'male'
-        
-        emozione, valenza, arousal = getValues(nomeFile)
-            
-        riga = ['/{}/'.format(training_dir.split("/")[2]) + newName, emozione, valenza, arousal, genere]           
-        
-        with open('{}/{}.csv'.format(datasetsDirectory,genereCartella), 'a', encoding='UTF8',newline='') as f:
-            writer = csv.writer(f,delimiter=';', quotechar='|', 
-                                quoting=csv.QUOTE_MINIMAL, 
-                                lineterminator="\n")
-            # scriviamo la riga
-            writer.writerow(riga)
-            f.close()
-
-        with open('{}/train_emovo_all.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
-            writer = csv.writer(f,delimiter=';', quotechar='|', 
-                                quoting=csv.QUOTE_MINIMAL, 
-                                lineterminator="\n")
-            # scriviamo la riga
-            writer.writerow(riga)
-            f.close()
-           
-        with open('{}/all_train_{}.csv'.format(datasetsDirectory, gender), 'a', encoding='UTF8',newline='') as f:
-            writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                      
-            # scriviamo la riga
-            writer.writerow(riga)  
-            f.close()
-            
-        with open('{}/all_train.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
-            writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                      
-            # scriviamo la riga
-            writer.writerow(riga)
-            f.close()
-    else:
-        if(fileName.split("/")[2].startswith("NP") or fileName.split("/")[2].startswith("PR")):
-            voceAttore = fileName.split("/")[2].split("_")[1] 
-            nomeFile = fileName.split("/")[2][8:11]
-        else:
-            voceAttore = fileName.split("/")[2].split("_")[0]
-            nomeFile = fileName.split("/")[2][5:8]
-        
-        if(voceAttore == 'f'):
-            genere = 'Donna'
-            gender = 'female'
-            genereCartella = "train_demos_female"
-        else:
-            genere = 'Uomo'
-            gender = 'male'
-            genereCartella = "train_demos_male"
-        
-        emozione, valenza, arousal = getValues(nomeFile)
-                           
-        header = ['/{}/'.format(training_dir.split("/")[2]) + newName, emozione, valenza, arousal, genere]
-                   
-        with open('{}/{}.csv'.format(datasetsDirectory, genereCartella), 'a', encoding='UTF8',newline='') as f:
-            writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                      
-            # scriviamo la riga
-            writer.writerow(header)  
-            f.close()
-
-        with open('{}/train_demos_all.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
-            writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                      
-            # scriviamo la riga
-            writer.writerow(header)  
-            f.close()
-
-        with open('{}/all_train_{}.csv'.format(datasetsDirectory, gender), 'a', encoding='UTF8',newline='') as f:
-            writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                      
-            # scriviamo la riga
-            writer.writerow(header)  
-            f.close()
-            
-        with open('{}/all_train.csv'.format(datasetsDirectory), 'a', encoding='UTF8',newline='') as f:
-            writer = csv.writer(f,delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-                      
-            # scriviamo la riga
-            writer.writerow(header)  
-            f.close()
     
     return
-
-def sortCSV():
-    
-    folders = os.listdir(datasetsDirectory)
-    
-    folders = list(filter(lambda x: x.endswith(".csv"), folders))
-    
-    print('-------------------------')
-    print("Ordino i vari CSV ...")
-    
-    for csvFile in folders:
-        
-        csvData = pd.read_csv("{}/{}".format(datasetsDirectory, csvFile), sep=';')
-        
-        csvData = csvData.reset_index(drop=True)
-        idx = csvData['NOME_FILE'].str.split('/', expand=True).sort_values([2,1,0]).index
-        csvData = csvData.reindex(idx).reset_index(drop=True)
-        
-        #csvData.sort_values(csvData.columns[0], 
-        #                axis=0,
-        #                inplace=True)
-        
-        csvData.to_csv("{}/{}".format(datasetsDirectory, csvFile), index=False, sep=";")
 
 def computeTransformation(wav_files):
 
@@ -269,8 +149,6 @@ def computeTransformation(wav_files):
         except Exception as e:
             print(f, e)
             pass
-
-    sortCSV()
         
 # ---------------------- MAIN ---------------------- #
 
@@ -297,12 +175,15 @@ for folder in folders:
     
     if os.path.exists(os.path.join(datasetsDirectory,folder,dataAugmentation)):
         shutil.rmtree((os.path.join(datasetsDirectory,folder,dataAugmentation)))
-        
+
     os.makedirs(os.path.join(datasetsDirectory,folder,dataAugmentation))
 
 columns = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
 df = pd.read_csv('{}/all_train.csv'.format(datasetsDirectory), sep=";", usecols=columns)
-wav_files = df['NOME_FILE'].tolist() #you can also use df['column_name']
+df = df[~df['NOME_FILE'].str.contains('/wav_DEMoS_augmentation', na=False)]
+df = df[~df['NOME_FILE'].str.contains('/emovo_augmentation', na=False)]
+
+wav_files = df['NOME_FILE'].tolist()
 
 if(len(wav_files) > 0):
     print('-------------------------')
