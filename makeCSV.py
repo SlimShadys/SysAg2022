@@ -3,7 +3,11 @@ import os
 import tqdm
 import pandas as pd
 
-# Define any condition here
+# Impostiamo questa variabile a 80, in modo tale da avere
+# Training -> 80%
+# Test     -> 20%
+percentualeSplittingTrain = 80
+
 def countFemale(x):
   return x.startswith("f")
 
@@ -61,9 +65,9 @@ def makeEmovoCSV(dataset):
     countFemaleTrain = sum(countFemale(x) for x in dataset)
     countMaleTrain = sum(countMale(x) for x in dataset)
     
-    percentageCountFemaleTrain = percentage(80, countFemaleTrain)
+    percentageCountFemaleTrain = percentage(percentualeSplittingTrain, countFemaleTrain)
     
-    percentageCountMaleTrain = percentage(80, countMaleTrain)
+    percentageCountMaleTrain = percentage(percentualeSplittingTrain, countMaleTrain)
     
     c = 0
     k = 0
@@ -261,9 +265,9 @@ def makeWAV_Demos_CSV(dataset):
     
     datasetDir = "wav_DEMoS"
 
-    percentageCountFemale = percentage(80, 23)
+    percentageCountFemale = percentage(percentualeSplittingTrain, 23)
     
-    percentageCountMale = percentage(80, 45)
+    percentageCountMale = percentage(percentualeSplittingTrain, 45)
     
     for directory in dataset:
             files = os.listdir(os.path.join(datasetsDirectory, datasetDir, directory))
