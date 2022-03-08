@@ -29,7 +29,15 @@ python makeCSV.py             # --> Update CSVs
 ## Start training with custom params
 ```
 cd ser-experiment/
-python train.py --dataset demos --gender male --uses_drive True --batch_size 14 --epoch 71 --patience 10 etc.
+python train.py --dataset demos --gender male --attention bam --uses_drive True --withAugmentation False --batch_size 64 --epoch 71 --patience 10 etc.
+```
+
+# Testing
+
+## Start testing with custom params
+```
+cd ser-experiment/
+python test.py --dataset demos --gender male --attention bam --uses_drive True --batch_size 64 --loadModel ../Results/Models/Gruppo_A/best_model_male-epoch_68.pt
 ```
 
 - Gianmarco Scarano

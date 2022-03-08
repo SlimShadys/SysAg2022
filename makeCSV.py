@@ -476,6 +476,83 @@ def makeWAV_Demos_CSV(dataset):
             writer.writerow(header)  
             f.close()
 
+def makeOperaCSV(dataset):
+    dataset.sort()
+
+    # nome_file, emozione, valenza, arousal
+    header = ['NOME_FILE', 'EMOZIONE', 'VALENZA', 'AROUSAL', 'GENERE']
+
+    with open('{}/val_opera7_all.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                            quoting=csv.QUOTE_MINIMAL, 
+                            lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+
+    with open('{}/val_opera7_female.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                            quoting=csv.QUOTE_MINIMAL, 
+                            lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+
+    with open('{}/val_opera7_male.csv'.format(datasetsDirectory), 'w', encoding='UTF8',newline='') as f:
+        writer = csv.writer(f,delimiter=';', quotechar='|', 
+                            quoting=csv.QUOTE_MINIMAL, 
+                            lineterminator="\n")
+        
+        # scriviamo la riga
+        writer.writerow(header)
+        f.close()
+
+    print("Scrivo sul CSV di test per il dataset di Opera ...")            
+        
+    for wav_file in tqdm.tqdm(dataset):
+        
+        emozioneFile = wav_file.split("_")[0]
+
+        emozioneFile = {
+            'anger': 'rab',
+            'disgust': 'dis',
+            'fearful': 'pau',
+            'happy': 'gio',
+            'neutral': 'neu',
+            'sad': 'tri',
+            'surprised': 'sor',
+        }.get(emozioneFile, 'col') 
+        
+        emozione, valenza, arousal = getValues(emozioneFile)
+        
+        genereFile = (wav_file.split(".")[0]).split("_")
+        genereFile = genereFile[len(genereFile)-1]
+
+        genereFileItalian = {
+            'male': 'Uomo',
+            'female': 'Donna',
+        }.get(genereFile, 'Uomo') 
+
+        riga = ['/{}'.format(wav_file), emozione, valenza, arousal, genereFileItalian]
+
+        with open('{}/val_opera7_{}.csv'.format(datasetsDirectory, genereFile), 'a', encoding='UTF8',newline='') as f:
+            writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                quoting=csv.QUOTE_MINIMAL, 
+                                lineterminator="\n")
+            # scriviamo la riga
+            writer.writerow(riga)
+            f.close()
+
+        with open('{}/val_opera7_all.csv'.format(datasetsDirectory, genereFile), 'a', encoding='UTF8',newline='') as f:
+            writer = csv.writer(f,delimiter=';', quotechar='|', 
+                                quoting=csv.QUOTE_MINIMAL, 
+                                lineterminator="\n")
+            # scriviamo la riga
+            writer.writerow(riga)
+            f.close()
+
 def makeAllTrainCSV():
 
     # nome_file, emozione, valenza, arousal
@@ -586,7 +663,12 @@ def sortCSV():
         csvData = pd.read_csv("{}/{}".format(datasetsDirectory, csvFile), sep=';')
         
         csvData = csvData.reset_index(drop=True)
-        idx = csvData['NOME_FILE'].str.split('/', expand=True).sort_values([2,1,0]).index
+
+        if(csvFile.startswith("val_opera7")):
+            idx = csvData['NOME_FILE'].str.split('/', expand=True).sort_values([1,0]).index
+        else:
+            idx = csvData['NOME_FILE'].str.split('/', expand=True).sort_values([2,1,0]).index
+
         csvData = csvData.reindex(idx).reset_index(drop=True)
                 
         csvData.to_csv("{}/{}".format(datasetsDirectory, csvFile), index=False, sep=";")
@@ -603,6 +685,7 @@ trainingEmovo = []
 testEmovo = []
 trainingWAVDemos = []
 testWAVDemos = []
+testOpera = []
 emovo = []
 WAVDemos = []
 emovo_aug = []
@@ -622,6 +705,10 @@ for file in folders:
 folders = list(filter(lambda x: not x.endswith(".csv") and not x == '15 Free Ambient Sound Effects' and not x.endswith("tmp"), folders))
 
 for datasetDir in folders:
+    if(datasetDir == 'OPERA7_wav'):
+        datasetFiles = os.listdir(os.path.join(datasetsDirectory, datasetDir))
+        testOpera.extend(datasetFiles)
+        continue
     if(datasetDir.endswith(".csv")):
         continue
     datasetDirectories = os.listdir(os.path.join(datasetsDirectory, datasetDir))
@@ -651,6 +738,12 @@ makeEmovoCSV(emovo)
 print("\nCSV per Emovo Training & Test completato.")
 print("------------------------------")
 
+# Opera
+makeOperaCSV(testOpera)
+print("\nCSV per Opera Test completato.")
+print("------------------------------")
+
+# All CSVs
 makeAllTrainCSV()
 makeAllTestCSV()
 print("\nCSV per train/test unificati completato.")

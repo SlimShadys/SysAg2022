@@ -70,58 +70,45 @@ def getEmotion(label, validation):
             label = 'Neutrale'
         return label 
 
-class Demos(data.Dataset):
+class Opera7(data.Dataset):
 
-    def __init__(self, gender, validation=None, split='train', transform=None, withAugmentation=True):
-        
+    def __init__(self, gender, validation=None, split='val', transform=None):
         if(os.getcwd().endswith("dataloader")):
             datasetDirectory = "../../Datasets"
         else:
             datasetDirectory = "../Datasets"
-        dataset = "wav_DEMoS"
 
-        csvName = "demos"
-        
+        dataset = 'OPERA7_wav'
+        csvName = "opera7"
+
         self.transform = transform
         self.split = split
         self.gender = gender
         self.validation = validation
         self.audios = os.path.join(datasetDirectory, dataset).replace('\\','/')
 
-        if self.split == "train":
+        if self.split == "val":
             if(gender == 'male'):       # CSV Uomo
-                csv = pd.read_csv("{}/train_{}_male.csv".format(datasetDirectory, csvName), sep=";", encoding='UTF8', index_col=False)
+                csv = pd.read_csv("{}/val_{}_male.csv".format(datasetDirectory, csvName), sep=';', encoding='UTF8', index_col=False)
             elif(gender == 'female'):   # CSV Donna
-                csv = pd.read_csv("{}/train_{}_female.csv".format(datasetDirectory, csvName), sep=";", encoding='UTF8', index_col=False)
+                csv = pd.read_csv("{}/val_{}_female.csv".format(datasetDirectory, csvName), sep=';', encoding='UTF8', index_col=False)
             else:                       # CSV Generale
-                csv = pd.read_csv("{}/train_{}_all.csv".format(datasetDirectory, csvName), sep=";", encoding='UTF8', index_col=False)
+                csv = pd.read_csv("{}/val_{}_all.csv".format(datasetDirectory, csvName), sep=';', encoding='UTF8', index_col=False)
 
-            # Controlliamo se dobbiamo utilizzare i file di data augmentation o meno    
-            if not withAugmentation:
-                csv = csv[~csv['NOME_FILE'].str.contains('/{}_augmentation'.format(dataset), na=False)]
-
-            csv.reset_index(drop=True, inplace=True)
-
-            self.data = csv
-                
-        elif self.split == "val":
-            if(gender == 'male'):       # CSV Uomo
-                self.data = pd.read_csv("{}/val_{}_male.csv".format(datasetDirectory, csvName), sep=";", encoding='UTF8', index_col=False)
-            elif(gender == 'female'):   # CSV Donna
-                self.data = pd.read_csv("{}/val_{}_female.csv".format(datasetDirectory, csvName), sep=";", encoding='UTF8', index_col=False)
-            else:                       # CSV Generale
-                self.data = pd.read_csv("{}/val_{}_all.csv".format(datasetDirectory, csvName), sep=";", encoding='UTF8', index_col=False)
-
+        self.data = csv
+            
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx):  
 
         if(os.getcwd().endswith("dataloader")):
             datasetDirectory = "../../Datasets"
         else:
             datasetDirectory = "../Datasets"
-        dataset = "wav_DEMoS"
+        dataset = 'OPERA7_wav'
+        
+        nomeFile = self.data.loc[idx, "NOME_FILE"]
         
         if(self.validation == "gender"):
             # Lettura della label associata all'emozione del file audio nel CSV
@@ -132,11 +119,9 @@ class Demos(data.Dataset):
 
         label = getLabel(label, self.validation)
        
-        fileName = self.data.loc[idx, "NOME_FILE"]
-
         # Lettura del percorso del file audio dal CSV
-        audio_file = datasetDirectory + "/{}".format(dataset) + fileName
-        
+        audio_file = datasetDirectory + "/{}".format(dataset) + nomeFile
+
         # Lettura del file .wav
         y, sr = librosa.load(audio_file, sr = 16000) # Use the default sampling rate of 22,050 Hz
         
@@ -178,22 +163,20 @@ class Demos(data.Dataset):
         if self.transform is not None:
             pil = self.transform(pil)
 
-        return {'image': pil, 'label': label, 'fileName': fileName}
+        return {'image': pil, 'label': label, 'fileName': nomeFile}
 
 if __name__ == "__main__":
     split = "val"
+    validation = "emotion"
     gender = "all"
-    validation = "gender"
-    withAugmentation = False
 
-    demosDataset = Demos(gender=gender, validation=validation, split=split,withAugmentation=withAugmentation)
-
-    print("Demos {} set successfully loaded".format(split))
-    print("Loaded a total of {} samples".format(len(demosDataset)))
+    operaTest = Opera7(gender=gender, validation=validation, split=split)
+    
+    print("Opera7 {} set successfully loaded".format(split))
+    print("Loaded a total of {} samples".format(len(operaTest)))
 
     for i in range(5):
-        
         random.seed(time.process_time())
-        i = np.random.randint(len(demosDataset))
-        print("Label associata al file n. {}: {} ({}) - Nome file: {}".format(i, demosDataset[i]['label'], getEmotion(demosDataset[i]['label'], validation), demosDataset[i]['fileName']))
-        plotFigure(demosDataset[i]['image'])
+        i = np.random.randint(len(operaTest))
+        print("Label associata al file n. {}: {} ({}) - Nome file: {}".format(i, operaTest[i]['label'], getEmotion(operaTest[i]['label'], validation), operaTest[i]['fileName']))
+        plotFigure(operaTest[i]['image'])

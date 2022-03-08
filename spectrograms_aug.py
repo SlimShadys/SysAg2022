@@ -166,7 +166,7 @@ if not os.path.exists(datasetsDirectory):
 
 folders = os.listdir(datasetsDirectory)
 
-folders = list(filter(lambda x: not x.endswith(".csv") and not x == '15 Free Ambient Sound Effects' and not x.endswith("tmp"), folders))
+folders = list(filter(lambda x: not x.endswith(".csv") and not x == '15 Free Ambient Sound Effects' and not x == 'OPERA7_wav' and not x.endswith("tmp"), folders))
 
 print("Pulisco le cartelle di data augmentation ...")
 for folder in folders:

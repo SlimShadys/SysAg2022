@@ -36,7 +36,6 @@ setup_seed(args.seed)
 
 logger = logging.getLogger('mnist_AutoML')
 
-
 def estimatedTime(singleTimeEpoch, i, totalEpochs, e, tempoTrascorso):
 
         epochRimanenti = totalEpochs - e
@@ -68,13 +67,25 @@ def estimatedTime(singleTimeEpoch, i, totalEpochs, e, tempoTrascorso):
 
 def main(args):
 
-    print("Starting training with the following configuration:")
+    # Args for debugging through IDE
+    #args['dataset'] = 'demosemovogender'                                                          # Replace with you own dataset
+    #args['gender'] = 'all'                                                          # Gender for the training dataset
+    #args['validation'] = 'gender'                                                     # Choose on what to do validation ("emotion" / "gender")
+    #args['checkpoint'] = 'result/demosemovogender/bam/all/checkpoint/checkpoint_all-epoch_3.pt'   # Choose checkpoint model
+    #args['uses_drive'] = False                                                         # Whether to choose Drive to save results
+    #args['withAugmentation'] = True                                                   # If dataset should contain augmentation files
+    #args['attention'] = 'bam'                                                          # Choose your model type (Bam) / (CBam)
+    #args['batch_size'] = 60                                                            # Batch size for training
+    #args['epochs'] = 10                                                               # Number of epochs for training
+
+    print("Starting validation with the following configuration:")
     print("Attention module: {}".format(args['attention']))
     print("Batch size: {}".format(args['batch_size']))
     print("Class weights: {}".format(args['class_weights']))
     print("Dataset: {}".format(args['dataset']))
     print("Epochs: {}".format(args['epochs']))
     print("Gender: {}".format(args['gender']))
+    print("Validation: {}".format(args['validation']))
     print("Learning rate: {}".format(args['learning_rate']))
     print("Metric to monitor: {}".format(args['monitor']))
     print("Momentum: {}".format(args['momentum']))
@@ -152,30 +163,40 @@ def main(args):
         ])
     
     if args["dataset"] == "demos":
-        train_data = Demos(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
-        val_data = Demos(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
-        # TODO: verificare che il numero di classi sia corretto
-        classes = 7
+        train_data = Demos(gender=args["gender"], validation=args["validation"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = Demos(gender=args["gender"], validation=args["validation"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
+        if (args["validation"] == "gender"):
+            classes = 2
+        else:
+            classes = 7
     elif args["dataset"]  == "emovo":
-        train_data = Emovo(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
-        val_data = Emovo(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
-        # TODO: verificare che il numero di classi sia corretto
-        classes = 7
+        train_data = Emovo(gender=args["gender"], validation=args["validation"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = Emovo(gender=args["gender"], validation=args["validation"], split="val", transform=val_preprocess)
+        if (args["validation"] == "gender"):
+            classes = 2
+        else:
+            classes = 7
     elif args["dataset"]  == "demosemovo":
-        train_data = DemosEmovo(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
-        val_data = DemosEmovo(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
-        # TODO: verificare che il numero di classi sia corretto
-        classes = 7
+        train_data = DemosEmovo(gender=args["gender"], validation=args["validation"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = DemosEmovo(gender=args["gender"], validation=args["validation"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
+        if (args["validation"] == "gender"):
+            classes = 2
+        else:
+            classes = 7
     elif args["dataset"]  == "demosemovogender":
-        train_data = DemosEmovoGender(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
-        val_data = DemosEmovoGender(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
-        # TODO: verificare che il numero di classi sia corretto
-        classes = 7
+        train_data = DemosEmovoGender(gender=args["gender"], validation=args["validation"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = DemosEmovoGender(gender=args["gender"], validation=args["validation"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
+        if (args["validation"] == "gender"):
+            classes = 2
+        else:
+            classes = 7
     else:
-        train_data = Demos(gender=args["gender"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
-        val_data = Demos(gender=args["gender"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
-        # TODO: verificare che il numero di classi sia corretto
-        classes = 7
+        train_data = Demos(gender=args["gender"], validation=args["validation"], split="train", transform=train_preprocess, withAugmentation=args["withAugmentation"])
+        val_data = Demos(gender=args["gender"], validation=args["validation"], split="val", transform=val_preprocess, withAugmentation=args["withAugmentation"])
+        if (args["validation"] == "gender"):
+            classes = 2
+        else:
+            classes = 7
     
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=args["batch_size"], shuffle=True, num_workers=args["workers"])
     val_loader = torch.utils.data.DataLoader(val_data, batch_size=args["batch_size"], shuffle=True, num_workers=args["workers"])
@@ -302,19 +323,39 @@ def main(args):
             'optimizer': optimizer.state_dict(),
             'scheduler': scheduler.state_dict(),
             'best_val_loss': best_val_loss,
-            'best_val_acc': best_val_acc
+            'best_val_acc': best_val_acc,
+            'val_correct': val_correct.double(),
+            'val_samples': len(val_data)
         }
         
         save_checkpoint(checkpoint, is_best, "result/{}/{}/{}/checkpoint".format(args["dataset"], args["attention"], args["gender"]), "result/{}/{}/{}/best".format(args["dataset"], args["attention"], args["gender"]), args["gender"], e+1)
     
         if is_best:
-            write = 'Epoch[{0}/{1}]\tTraining loss: {training_loss:.8f}\tValidation Loss {validation_loss:.8f}\tTraining Accuracy {training_accuracy:.3f}% \tValidation Accuracy {validation_accuracy:.3f}% [saved]\n'.format(e + 1, args['epochs'], training_loss=train_loss, validation_loss=validation_loss, training_accuracy=train_acc * 100, validation_accuracy=val_acc * 100)
+            write = 'Epoch[{0}/{1}]\tTraining loss: {training_loss:.8f}\tValidation Loss {validation_loss:.8f}\tTraining Accuracy {training_accuracy:.3f}% \tValidation Accuracy {validation_accuracy:.3f}% || val_correct: {val_correct} - val_samples: {val_samples} || [saved]\n'.format(
+                e + 1,
+                args['epochs'],
+                training_loss=train_loss,
+                validation_loss=validation_loss,
+                training_accuracy=train_acc * 100,
+                validation_accuracy=val_acc * 100,
+                val_correct = val_correct.double(),
+                val_samples = len(val_data))
+
             print("\n{}".format(write))
 
             if platform.system() == "Linux" and args['uses_drive']:
                 shutil.copy("result/{}/{}/{}/best".format(args["dataset"], args["attention"], args["gender"]) + "/best_model_{}-epoch_{}.pt".format(args["gender"], e+1), "../../gdrive/MyDrive/SysAg2022/{}/{}/{}/{}/best_model_{}-epoch_{}.pt".format(args["dataset"], args["attention"], args["gender"], "best", args["gender"], e+1))
         else:
-            write = 'Epoch[{0}/{1}]\tTraining loss: {training_loss:.8f}\tValidation Loss {validation_loss:.8f}\tTraining Accuracy {training_accuracy:.3f}% \tValidation Accuracy {validation_accuracy:.3f}%\n'.format(e + 1, args['epochs'], training_loss=train_loss, validation_loss=validation_loss, training_accuracy=train_acc * 100, validation_accuracy=val_acc * 100)
+            write = 'Epoch[{0}/{1}]\tTraining loss: {training_loss:.8f}\tValidation Loss {validation_loss:.8f}\tTraining Accuracy {training_accuracy:.3f}% \tValidation Accuracy {validation_accuracy:.3f}% || val_correct: {val_correct} - val_samples: {val_samples} ||\n'.format(
+                e + 1, 
+                args['epochs'], 
+                training_loss=train_loss, 
+                validation_loss=validation_loss, 
+                training_accuracy=train_acc * 100, 
+                validation_accuracy=val_acc * 100, 
+                val_correct = val_correct.double(),
+                val_samples = len(val_data))
+                
             print("\n{}".format(write))
             
             if platform.system() == "Linux" and args['uses_drive']:

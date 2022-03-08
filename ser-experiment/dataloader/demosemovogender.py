@@ -22,23 +22,57 @@ def plotFigure(img):
     
     plt.close()
 
-def getLabel(gender):
-    if (gender == 'Donna'):
-        gender = 0
-    else : # Uomo
-        gender = 1
-    return gender
+def getLabel(label, validation):
+    if(validation == "gender"):
+        if (label == 'Donna'):
+            label = 0
+        else : # Uomo
+            label = 1
+        return label
+    else: # validation == 'emotion'
+        if (label == 'Disgusto'):
+            label = 0
+        elif (label == 'Gioia') :
+            label = 1
+        elif (label == 'Paura'):
+            label = 2
+        elif (label == 'Rabbia'):
+            label = 3
+        elif (label == 'Sorpresa'):
+            label = 4
+        elif (label == 'Tristezza'):
+            label = 5
+        else : # Neutrale
+            label = 6
+        return label
 
-def getGender(label):
-    if (label == 0):
-        gender = 'Donna'
-    else : # Uomo
-        gender = 'Uomo'
-    return gender 
+def getEmotion(label, validation):
+    if(validation == "gender"):
+        if (label == 0):
+            label = 'Donna'
+        else : # Uomo
+            label = 'Uomo'
+        return label
+    else: # validation == 'emotion'
+        if (label == 0):
+            label = 'Disgusto'
+        elif (label == 1) :
+            label = 'Gioia'
+        elif (label == 2):
+            label = 'Paura'
+        elif (label == 3):
+            label = 'Rabbia'
+        elif (label == 4):
+            label = 'Sorpresa'
+        elif (label == 5):
+            label = 'Tristezza'
+        else : # Neutrale
+            label = 'Neutrale'
+        return label 
 
 class DemosEmovoGender(data.Dataset):
 
-    def __init__(self, gender, split='train', transform=None, withAugmentation=True):
+    def __init__(self, gender, validation=None, split='train', transform=None, withAugmentation=True):
         if(os.getcwd().endswith("dataloader")):
             datasetDirectory = "../../Datasets"
         else:
@@ -49,6 +83,7 @@ class DemosEmovoGender(data.Dataset):
         self.transform = transform
         self.split = split
         self.gender = gender
+        self.validation = validation
         self.audios = None # Non abbiamo una cartella in cui sono contenuti i file di Demos + Emovo
 
         if self.split == "train":
@@ -93,9 +128,14 @@ class DemosEmovoGender(data.Dataset):
         else:
             dataset = "emovo"
         
-        # Lettura della label associata al gender del file audio nel CSV
-        gender = self.data.loc[idx, "GENERE"]
-        gender = getLabel(gender)
+        if(self.validation == "gender"):
+            # Lettura della label associata all'emozione del file audio nel CSV
+            label = self.data.loc[idx, "GENERE"]
+        else: # validation = "emotion"
+            # Lettura della label associata all'emozione del file audio nel CSV
+            label = self.data.loc[idx, "EMOZIONE"]
+
+        label = getLabel(label, self.validation)
        
         # Lettura del percorso del file audio dal CSV
         audio_file = datasetDirectory + "/{}".format(dataset) + nomeFile
@@ -141,18 +181,22 @@ class DemosEmovoGender(data.Dataset):
         if self.transform is not None:
             pil = self.transform(pil)
 
-        return {'image': pil, 'label': gender, 'fileName': nomeFile}
+        return {'image': pil, 'label': label, 'fileName': nomeFile}
 
 
 if __name__ == "__main__":
     split = "train"
     gender = "all"
-    DemosEmovoGender_train = DemosEmovoGender(gender=gender,split=split,withAugmentation=False)
+    validation = "emotion"
+    withAugmentation = False
+
+    DemosEmovoGenderDataset = DemosEmovoGender(gender=gender, validation=validation, split=split,withAugmentation=withAugmentation)
+
     print("DemosEmovoGender {} set successfully loaded".format(split))
-    print("Loaded a total of {} samples".format(len(DemosEmovoGender_train)))
+    print("Loaded a total of {} samples".format(len(DemosEmovoGenderDataset)))
 
     for i in range(5):
         random.seed(time.process_time())
-        i = np.random.randint(len(DemosEmovoGender_train))
-        print("Gender associato al file n. {}: {} ({}) --> File '{}'".format(i, DemosEmovoGender_train[i]['label'], getGender(DemosEmovoGender_train[i]['label']), DemosEmovoGender_train[i]['fileName']))
-        plotFigure(DemosEmovoGender_train[i]['image'])
+        i = np.random.randint(len(DemosEmovoGenderDataset))
+        print("Gender associato al file n. {}: {} ({}) --> File '{}'".format(i, DemosEmovoGenderDataset[i]['label'], getEmotion(DemosEmovoGenderDataset[i]['label'], validation), DemosEmovoGenderDataset[i]['fileName']))
+        plotFigure(DemosEmovoGenderDataset[i]['image'])

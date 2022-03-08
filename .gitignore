@@ -5,6 +5,7 @@ Datasets/
 
 ## Ignore Result files
 Results/Models/
+Results/Risultati Validation/
 
 ## Ignore CSV files
 CSV/
