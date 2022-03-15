@@ -68,15 +68,15 @@ def estimatedTime(singleTimeEpoch, i, totalEpochs, e, tempoTrascorso):
 def main(args):
 
     # Args for debugging through IDE
-    #args['dataset'] = 'demosemovogender'                                                          # Replace with you own dataset
-    #args['gender'] = 'all'                                                          # Gender for the training dataset
-    #args['validation'] = 'gender'                                                     # Choose on what to do validation ("emotion" / "gender")
-    #args['checkpoint'] = 'result/demosemovogender/bam/all/checkpoint/checkpoint_all-epoch_3.pt'   # Choose checkpoint model
-    #args['uses_drive'] = False                                                         # Whether to choose Drive to save results
-    #args['withAugmentation'] = True                                                   # If dataset should contain augmentation files
-    #args['attention'] = 'bam'                                                          # Choose your model type (Bam) / (CBam)
-    #args['batch_size'] = 60                                                            # Batch size for training
-    #args['epochs'] = 10                                                               # Number of epochs for training
+    #args['dataset'] = 'demosemovo'                                                                 # Replace with you own dataset
+    #args['gender'] = 'female'                                                                      # Gender for the training dataset
+    #args['validation'] = 'emotion'                                                                 # Choose on what to do validation ("emotion" / "gender")
+    #args['checkpoint'] = 'result/demosemovo/bam/female/checkpoint/checkpoint_female-epoch_27.pt'   # Choose checkpoint model
+    #args['uses_drive'] = False                                                                     # Whether to choose Drive to save results
+    #args['withAugmentation'] = False                                                               # If dataset should contain augmentation files
+    #args['attention'] = 'bam'                                                                      # Choose your model type (Bam) / (CBam)
+    #args['batch_size'] = 60                                                                        # Batch size for training
+    #args['epochs'] = 100                                                                           # Number of epochs for training
 
     print("Starting validation with the following configuration:")
     print("Attention module: {}".format(args['attention']))
@@ -128,7 +128,7 @@ def main(args):
         print("GPU: " + torch.cuda.get_device_name(torch.cuda.current_device()))
         print("Total memory: {:.1f} GB".format((float(torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)))))
         print("===================================================")
-        torch.cuda.empty_cache()
+        #torch.cuda.empty_cache()
     else:
         device = torch.device("cpu")
         print('Cuda not available. Using CPU.')

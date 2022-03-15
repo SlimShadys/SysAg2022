@@ -38,10 +38,10 @@ def main(args):
 
     # Args for debugging through IDE
     #args['dataset'] = 'demos'                                                          # Replace with you own dataset
-    #args['gender'] = 'male'                                                          # Gender for the training dataset
+    #args['gender'] = 'all'                                                             # Gender for the training dataset
     #args['validation'] = 'emotion'                                                     # Choose on what to do validation ("emotion" / "gender")
     #args['uses_drive'] = False                                                         # Whether to choose Drive to save results
-    #args['loadModel'] = '.pt'    # Load model for validation
+    #args['loadModel'] = 'result/SysAg2022/best_model_gruppo_N_all.pt'                  # Load model for validation
     #args['attention'] = 'bam'                                                          # Choose your model type (Bam) / (CBam)
     #args['batch_size'] = 64                                                            # Batch size for training
 
